@@ -1,0 +1,162 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 2rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.app-title-mono {
+  font-weight: var(--font-weight-bold);
+  color: var(--text-light);
+  transition: none;
+}
+
+.app-title-bank {
+  font-weight: var(--font-weight-bold);
+  color: var(--mono-yellow);
+  transition: none;
+}
+
+.app-title-donate {
+  margin-left: 0.5rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: var(--font-weight-normal);
+  transition: none;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.app-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.app-card-container {
+  display: flex;
+  justify-content: center;
+}
+
+.app-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.app-info-card {
+  padding: 1.5rem;
+}
+
+.app-info-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+}
+
+.app-info-text {
+  margin-bottom: 1.5rem;
+  line-height: var(--line-height-relaxed);
+  color: rgba(255,255,255,0.8);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-base);
+}
+
+.button-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.5rem;
+}
+
+.app-footer {
+  width: 100%;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-top: auto;
+  color: rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background-color: rgba(28,28,30,0.95);
+  transition: color var(--theme-transition-duration) var(--theme-transition-timing),
+              background-color var(--theme-transition-duration) var(--theme-transition-timing),
+              border-color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+.app-footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: var(--font-ui);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.app-footer-brand {
+  display: flex;
+  align-items: center;
+}
+
+.app-footer-year {
+  margin-right: 0.35rem;
+}
+
+.app-footer-mono {
+  font-weight: var(--font-weight-bold);
+  color: var(--text-light);
+  transition: none;
+}
+
+.app-footer-bank {
+  font-weight: var(--font-weight-bold);
+  color: var(--mono-yellow);
+  transition: none;
+}
+
+.app-footer-donate {
+  margin-left: 0.2rem;
+  font-weight: var(--font-weight-normal);
+  transition: none;
+}
+
+.app-footer-separator {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  color: rgba(255,255,255,0.6);
+}
+
+.app-footer-credits {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  color: rgba(255,255,255,0.6);
+} 

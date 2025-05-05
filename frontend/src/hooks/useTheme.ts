@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 type Theme = 'dark';
 
@@ -17,10 +17,5 @@ export function useTheme() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Тепер toggleTheme не змінює тему, але повертаємо його для сумісності
-  const toggleTheme = () => {
-    // Нічого не робимо, тема завжди темна
-  };
-
-  return { theme, toggleTheme };
+  return { theme };
 } 

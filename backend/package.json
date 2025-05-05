@@ -12,9 +12,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/helmet": "^0.0.48",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "express-xss-sanitizer": "^2.0.0",
+    "helmet": "^8.1.0",
     "puppeteer": "^24.8.0"
   },
   "devDependencies": {
