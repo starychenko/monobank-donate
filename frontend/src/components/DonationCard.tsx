@@ -1,16 +1,15 @@
 import QRCode from 'react-qr-code';
 
 interface DonationCardProps {
-  title: string | null;
   collected: string | null;
   target: string | null;
   jarUrl: string;
   progress: number;
 }
 
-export function DonationCard({ title, collected, target, jarUrl, progress }: DonationCardProps) {
+export function DonationCard({ collected, target, jarUrl, progress }: DonationCardProps) {
   return (
-    <div className="card" style={{ width: '100%', maxWidth: '380px' }}>
+    <div className="card" style={{ width: '100%', maxWidth: '400px', marginRight: '-5px' }}>
       {/* Заголовок */}
       <div style={{ 
         padding: '16px', 
@@ -21,13 +20,13 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
         borderTopRightRadius: 'var(--border-radius)'
       }}>
         <h2 style={{ 
-          fontSize: '20px', 
+          fontSize: '22px', 
           fontWeight: 700,
           margin: 0,
           letterSpacing: '0.03em',
           color: '#000000'
         }}>
-          {title || 'Назва збору'}
+          Скануй QR-код
         </h2>
       </div>
 
@@ -43,15 +42,15 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
           {jarUrl ? (
             <QRCode 
               value={jarUrl} 
-              size={150}
+              size={180}
               bgColor="white"
               fgColor="#000000"
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
             />
           ) : (
             <div style={{ 
-              width: '150px', 
-              height: '150px', 
+              width: '180px', 
+              height: '180px', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
@@ -73,13 +72,13 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
             flex: 1, 
             backgroundColor: 'rgba(255,255,255,0.05)', 
             borderRadius: '0.75rem', 
-            padding: '1rem 0.5rem', 
+            padding: '1rem 0.75rem', 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center' 
           }}>
             <span style={{ 
-              fontSize: 'var(--font-size-xs)', 
+              fontSize: 'var(--font-size-sm)', 
               color: 'rgba(255,255,255,0.5)', 
               marginBottom: '0.25rem',
               fontFamily: 'var(--font-ui)',
@@ -89,7 +88,7 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
             </span>
             <span style={{ 
               fontWeight: 'var(--font-weight-bold)', 
-              fontSize: 'var(--font-size-lg)', 
+              fontSize: 'var(--font-size-xl)', 
               color: 'var(--primary-color)',
               fontFamily: 'var(--font-ui)'
             }}>
@@ -100,13 +99,13 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
             flex: 1, 
             backgroundColor: 'rgba(255,255,255,0.05)', 
             borderRadius: '0.75rem', 
-            padding: '1rem 0.5rem', 
+            padding: '1rem 0.75rem', 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center' 
           }}>
             <span style={{ 
-              fontSize: 'var(--font-size-xs)', 
+              fontSize: 'var(--font-size-sm)', 
               color: 'rgba(255,255,255,0.5)', 
               marginBottom: '0.25rem',
               fontFamily: 'var(--font-ui)',
@@ -116,7 +115,7 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
             </span>
             <span style={{ 
               fontWeight: 'var(--font-weight-bold)', 
-              fontSize: 'var(--font-size-lg)', 
+              fontSize: 'var(--font-size-xl)', 
               color: 'var(--primary-color)',
               fontFamily: 'var(--font-ui)'
             }}>
@@ -126,10 +125,10 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
         </div>
 
         {/* Прогрес-бар */}
-        <div style={{ width: '100%', marginTop: '0.5rem' }}>
+        <div style={{ width: '100%', marginTop: '0.25rem' }}>
           <div style={{ 
             width: '100%', 
-            height: '0.5rem', 
+            height: '0.6rem', 
             backgroundColor: 'rgba(255,255,255,0.1)', 
             borderRadius: '9999px', 
             overflow: 'hidden' 
@@ -146,14 +145,14 @@ export function DonationCard({ title, collected, target, jarUrl, progress }: Don
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
             <span style={{ 
-              fontSize: 'var(--font-size-xs)', 
+              fontSize: 'var(--font-size-sm)', 
               color: 'rgba(255,255,255,0.5)',
               fontFamily: 'var(--font-ui)'
             }}>
               Прогрес
             </span>
             <span style={{ 
-              fontSize: 'var(--font-size-xs)', 
+              fontSize: 'var(--font-size-sm)', 
               fontWeight: 'var(--font-weight-medium)', 
               color: 'var(--primary-color)',
               fontFamily: 'var(--font-ui)'

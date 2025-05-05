@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { DonationCard } from './components/DonationCard'
 import { StatusInfo } from './components/StatusInfo'
 import { useTheme } from './hooks/useTheme'
@@ -13,12 +13,18 @@ interface FundData {
   title: string | null
   collected: string | null
   target: string | null
+  description?: string
 }
 
 function App() {
   // Використовуємо хук useTheme для встановлення темної теми
   useTheme();
-  const [data, setData] = useState<FundData>({ title: '', collected: '', target: '' })
+  const [data, setData] = useState<FundData>({ 
+    title: '', 
+    collected: '', 
+    target: '',
+    description: 'Збираємо кошти для ремонту авто Toyota Hilux яка потребує капітального ремонту двигуна, реставрації кардану, заміни щеплення, відновлення ходової частини'
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | undefined>(undefined)
@@ -27,7 +33,7 @@ function App() {
   // Ref to track if initial fetch has been done
   const initialFetchDone = useRef(false)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -57,6 +63,7 @@ function App() {
         title: typeof json.title === 'string' ? json.title : 'Назва збору',
         collected: typeof json.collected === 'string' ? json.collected : '',
         target: typeof json.target === 'string' ? json.target : '',
+        description: data.description // Зберігаємо поточний опис
       };
       
       setData(cleanData)
@@ -68,7 +75,7 @@ function App() {
       setLoading(false)
       setShouldFetch(false)
     }
-  }
+  }, [data.description]);
 
   // Handle the initial fetch when component mounts
   useEffect(() => {
@@ -76,14 +83,14 @@ function App() {
       fetchData()
       initialFetchDone.current = true
     }
-  }, [])
+  }, [fetchData])
 
   // Handle subsequent fetches when shouldFetch changes
   useEffect(() => {
     if (shouldFetch && initialFetchDone.current) {
       fetchData()
     }
-  }, [shouldFetch])
+  }, [shouldFetch, fetchData])
 
   // Прогрес-бар - покращена функція для правильної обробки чисел
   const getProgress = () => {
@@ -104,23 +111,24 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="container app-content">
-        {/* Заголовок */}
-        <header className="app-header">
+      {/* Заголовок - переміщено за межі контейнера app-content для кращої видимості */}
+      <header className="app-header">
+        <div className="container header-container">
           <h1 className="app-title">
             <span className="app-title-mono">mono</span>
             <span className="app-title-bank">bank</span>
             <span className="app-title-donate">Donate</span>
           </h1>
-        </header>
-
+        </div>
+      </header>
+      
+      <div className="container app-content">
         {/* Основний контент */}
         <main className="app-main">
           <div className="app-grid">
             {/* Картка з інформацією про збір */}
             <div className="app-card-container">
               <DonationCard
-                title={data.title}
                 collected={data.collected}
                 target={data.target}
                 jarUrl={JAR_URL}
@@ -128,7 +136,7 @@ function App() {
               />
             </div>
 
-            {/* Блок статусу і інформації */}
+            {/* Блок статусу і інформації про збір */}
             <div className="app-info-container">
               <StatusInfo
                 loading={loading}
@@ -138,14 +146,13 @@ function App() {
                 onCountdownComplete={() => setShouldFetch(true)}
               />
 
-              {/* Додаткова інформація */}
-              <div className="card app-info-card">
-                <h3 className="app-info-title">
-                  Про проєкт
+              {/* Інформація про збір */}
+              <div className="card app-info-card" style={{ marginLeft: '-5px', padding: '1.25rem' }}>
+                <h3 className="app-info-title" style={{ fontSize: 'var(--font-size-xl)', marginBottom: '0.75rem' }}>
+                  Збір для 41 ОМБ
                 </h3>
-                <p className="app-info-text">
-                  Цей сервіс дозволяє відстежувати збір коштів на платформі Monobank у реальному часі.
-                  Дані автоматично оновлюються для відображення актуального стану збору.
+                <p className="app-info-text" style={{ fontSize: 'var(--font-size-base)', lineHeight: '1.5', marginBottom: '1.25rem' }}>
+                  {data.description}
                 </p>
                 
                 <div>
@@ -154,13 +161,15 @@ function App() {
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="gradient-button"
+                    style={{ padding: '0.75rem 1.5rem', fontSize: 'var(--font-size-base)' }}
                   >
-                    Відкрити збір
+                    Долучитись до збору
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
                       className="button-icon" 
                       viewBox="0 0 20 20" 
                       fill="currentColor"
+                      style={{ width: '1.25rem', height: '1.25rem', marginLeft: '0.5rem' }}
                     >
                       <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                       <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
@@ -171,6 +180,23 @@ function App() {
             </div>
           </div>
         </main>
+      </div>
+      
+      {/* Про проєкт - розміщено над футером */}
+      <div className="app-about-wrapper">
+        <div className="container">
+          <div className="app-about-section">
+            <div className="card app-about-card">
+              <h3 className="app-about-title">
+                Про проєкт
+              </h3>
+              <p className="app-about-text">
+                Цей сервіс дозволяє відстежувати збір коштів на платформі Monobank у реальному часі.
+                Дані автоматично оновлюються для відображення актуального стану збору.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Футер */}
