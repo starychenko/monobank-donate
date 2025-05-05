@@ -9,7 +9,7 @@
 Сучасний веб-додаток для відстеження статусу збору донатів на платформі Monobank у режимі реального часу, створений для підтримки благодійних зборів.
 
 <p align="center">
-  <img src="https://i.imgur.com/placeholder.png" alt="Monobank Donate Screenshot" width="600" />
+  <img src="https://imgur.com/a/wCQPeMX" alt="Monobank Donate Screenshot" width="600" />
 </p>
 
 ## ✨ Особливості
