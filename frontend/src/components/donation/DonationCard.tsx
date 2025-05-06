@@ -1,4 +1,5 @@
 import QRCode from 'react-qr-code';
+import { ProgressBar } from '../common/ProgressBar';
 
 interface DonationCardProps {
   collected: string | null;
@@ -7,6 +8,9 @@ interface DonationCardProps {
   progress: number;
 }
 
+/**
+ * Компонент DonationCard - відображає QR-код для пожертвування та статистику збору
+ */
 export function DonationCard({ collected, target, jarUrl, progress }: DonationCardProps) {
   return (
     <div className="card donation-card">
@@ -57,22 +61,7 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
         </div>
 
         {/* Прогрес-бар */}
-        <div className="donation-card-progress">
-          <div className="donation-card-progress-bar">
-            <div
-              className="donation-card-progress-value"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="donation-card-progress-text">
-            <span className="donation-card-progress-label">
-              Прогрес
-            </span>
-            <span className="donation-card-progress-percent">
-              {progress.toFixed(1)}%
-            </span>
-          </div>
-        </div>
+        <ProgressBar progress={progress} />
       </div>
     </div>
   );

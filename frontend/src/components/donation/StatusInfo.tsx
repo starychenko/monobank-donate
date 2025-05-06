@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useCountdown } from '../../hooks/useCountdown';
+import { useEffect } from 'react';
 
 interface StatusInfoProps {
   loading: boolean;
@@ -8,28 +9,30 @@ interface StatusInfoProps {
   onCountdownComplete?: () => void;
 }
 
-export function StatusInfo({ loading, error, updateInterval, lastUpdated, onCountdownComplete }: StatusInfoProps) {
-  const [countdown, setCountdown] = useState<number>(updateInterval / 1000);
+/**
+ * Компонент StatusInfo - відображає статус оновлення даних та зворотний відлік до наступного оновлення
+ */
+export function StatusInfo({ 
+  loading, 
+  error, 
+  updateInterval, 
+  lastUpdated, 
+  onCountdownComplete 
+}: StatusInfoProps) {
+  const { seconds, restart } = useCountdown(
+    updateInterval,
+    false,
+    onCountdownComplete,
+    false // Не перезапускаємо при зміні updateInterval
+  );
   
-  // Запускаємо зворотній відлік
+  // Перезапуск таймера після завершення завантаження
   useEffect(() => {
-    if (loading) return; // Не рахуємо під час завантаження
-    
-    setCountdown(updateInterval / 1000);
-    
-    const timer = setInterval(() => {
-      setCountdown(prev => Math.max(0, prev - 1));
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [loading, updateInterval, lastUpdated]);
-  
-  // Окремий ефект для виклику onCountdownComplete
-  useEffect(() => {
-    if (countdown === 0 && onCountdownComplete && !loading) {
-      onCountdownComplete();
+    // Якщо завантаження завершилось і таймер не запущено
+    if (!loading && lastUpdated) {
+      restart();
     }
-  }, [countdown, onCountdownComplete, loading]);
+  }, [loading, lastUpdated, restart]);
   
   const formatTime = (date?: Date) => {
     if (!date) return 'Не відомо';
@@ -58,7 +61,7 @@ export function StatusInfo({ loading, error, updateInterval, lastUpdated, onCoun
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
               </svg>
               <span>
-                Наступне оновлення через: <strong className="font-semibold text-primary">{countdown}</strong> с
+                Наступне оновлення через: <strong className="font-semibold text-primary">{seconds}</strong> с
               </span>
             </>
           )}
