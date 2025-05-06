@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import QRCode from 'react-qr-code';
 import { ProgressBar } from '../common/ProgressBar';
+import { AnimatedValue } from '../common/AnimatedValue';
 
 /**
  * Інтерфейс для властивостей компонента DonationCard
@@ -85,19 +86,16 @@ const DonationCard = memo(function DonationCard({
           <div 
             className="donation-card-stat"
             style={{ 
-              transition: 'all 0.3s ease',
-              animation: collected ? 'pulse 0.5s ease' : 'none'
+              transition: 'all 0.3s ease'
             }}
           >
             <span className="donation-card-stat-label">
               Накопичено
             </span>
-            <span 
+            <AnimatedValue 
+              value={collected} 
               className="donation-card-stat-value"
-              style={{ transition: 'color 0.3s ease' }}
-            >
-              {collected || '—'}
-            </span>
+            />
           </div>
           <div className="donation-card-stat">
             <span className="donation-card-stat-label">

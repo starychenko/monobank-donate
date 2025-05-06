@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 
 /**
  * Інтерфейс для властивостей компонента ProgressBar
@@ -45,14 +45,82 @@ const ProgressBar = memo(function ProgressBar({
   // Обмежуємо значення прогресу від 0 до 100 для безпеки
   const clampedProgress = Math.min(Math.max(0, progress), 100);
   
+  // Стан для анімованих значень
+  const [displayProgress, setDisplayProgress] = useState(clampedProgress);
+  const [displayPercentage, setDisplayPercentage] = useState(clampedProgress);
+  
+  // Референції для анімації
+  const prevProgressRef = useRef(clampedProgress);
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  
+  // Константа для тривалості анімації
+  const animationDuration = 800;
+  
+  useEffect(() => {
+    if (prevProgressRef.current === clampedProgress) return;
+    
+    const startValue = prevProgressRef.current;
+    const endValue = clampedProgress;
+    const difference = endValue - startValue;
+    
+    // Скасовуємо попередню анімацію, якщо така є
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    // Функція анімації за допомогою requestAnimationFrame
+    const animate = (timestamp: number) => {
+      if (startTimeRef.current === null) {
+        startTimeRef.current = timestamp;
+      }
+      
+      const elapsed = timestamp - startTimeRef.current;
+      const progress = Math.min(elapsed / animationDuration, 1);
+      
+      // Використовуємо функцію пом'якшення (easing) для більш природної анімації
+      const easedProgress = easeOutQuart(progress);
+      
+      // Розраховуємо поточне значення
+      const currentValue = startValue + difference * easedProgress;
+      setDisplayProgress(currentValue);
+      setDisplayPercentage(currentValue);
+      
+      // Продовжуємо анімацію, якщо не досягнуто кінця
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Завершуємо анімацію
+        setDisplayProgress(endValue);
+        setDisplayPercentage(endValue);
+        prevProgressRef.current = endValue;
+        startTimeRef.current = null;
+        animationRef.current = null;
+      }
+    };
+    
+    // Запускаємо анімацію
+    animationRef.current = requestAnimationFrame(animate);
+    
+    // Очищення при розмонтуванні або зміні значення
+    return () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [clampedProgress]);
+  
+  // Функція пом'якшення (easing function)
+  const easeOutQuart = (x: number) => 1 - Math.pow(1 - x, 4);
+  
   return (
     <div className="donation-card-progress">
       <div className="donation-card-progress-bar">
         <div
           className="donation-card-progress-value"
           style={{ 
-            width: `${clampedProgress}%`,
-            transition: 'width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+            width: `${displayProgress}%`,
+            transition: 'none' // Вимикаємо CSS-transition, оскільки анімуємо через JS
           }}
         ></div>
       </div>
@@ -64,9 +132,8 @@ const ProgressBar = memo(function ProgressBar({
           </span>
           <span 
             className="donation-card-progress-percent"
-            style={{ transition: 'all 0.5s ease' }}
           >
-            {clampedProgress.toFixed(1)}%
+            {displayPercentage.toFixed(1)}%
           </span>
         </div>
       )}

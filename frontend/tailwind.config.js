@@ -78,8 +78,12 @@ export default {
       },
       boxShadow: {
         'card': '0 8px 20px rgba(0, 0, 0, 0.08)',
+        'card-light': '0 10px 25px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 0, 0, 0.03)',
         'lg': '0 12px 40px rgba(0, 0, 0, 0.15)',
+        'lg-light': '0 16px 45px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05)',
         'qr': '0 4px 12px rgba(0, 0, 0, 0.08)',
+        'qr-light': '0 6px 16px rgba(0, 0, 0, 0.1)',
+        'hover-light': '0 20px 50px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.06)',
       },
       screens: {
         'sm': '640px',

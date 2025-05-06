@@ -78,20 +78,20 @@
 @layer components {
   /* Картки */
   .card {
-    @apply rounded-card overflow-hidden border transition-transform duration-300 ease-in-out hover:translate-y-[-5px];
+    @apply rounded-card overflow-hidden border transition-all duration-300 ease-in-out;
   }
   
   .dark .card {
-    @apply bg-[#222222] shadow-card border-white-6 text-text-light hover:shadow-lg;
+    @apply bg-[#222222] shadow-card border-white-6 text-text-light hover:shadow-lg hover:scale-[1.02];
   }
   
   .light .card {
-    @apply bg-white shadow-md border-gray-200 text-black hover:shadow-xl;
+    @apply bg-white shadow-card-light border-gray-200 text-black hover:shadow-hover-light hover:scale-[1.02];
   }
   
   /* Кнопки */
   .gradient-button {
-    @apply text-black py-3 px-6 rounded-lg font-semibold inline-flex items-center transition-all duration-300 hover:translate-y-[-2px] text-sm tracking-wider;
+    @apply text-black py-3 px-6 rounded-lg font-semibold inline-flex items-center transition-all duration-300 hover:scale-[1.03] text-sm tracking-wider;
   }
   
   .dark .gradient-button { @apply bg-gradient-primary hover:bg-gradient-dark; }
@@ -116,13 +116,24 @@
   
   .header-container { @apply flex justify-between items-center w-full; }
   
+  /* Кнопки в хедері */
+  .app-header-actions { @apply flex items-center gap-2; }
+  
   /* Кнопка теми */
   .theme-toggle-button {
-    @apply p-2 rounded-full cursor-pointer transition-all duration-300 ml-4;
+    @apply p-2 rounded-full cursor-pointer transition-all duration-300;
   }
   
   .dark .theme-toggle-button { @apply hover:bg-white-10 text-white; }
   .light .theme-toggle-button { @apply hover:bg-gray-200 text-gray-800; }
+  
+  /* Кнопка сповіщень */
+  .notification-toggle-button {
+    @apply p-2 rounded-full cursor-pointer transition-all duration-300;
+  }
+  
+  .dark .notification-toggle-button { @apply hover:bg-white-10 text-white; }
+  .light .notification-toggle-button { @apply hover:bg-gray-200 text-gray-800; }
   
   /* Заголовок додатку */
   .app-title { @apply text-3xl font-bold flex items-center font-heading tracking-tight m-0; }
@@ -140,7 +151,11 @@
   .light .app-title-donate { @apply text-gray-600; }
   
   /* Інформаційна картка */
-  .app-info-card { @apply p-5 -ml-[5px]; }
+  .app-info-card { @apply p-5 -ml-[5px] transition-all duration-300 ease-in-out hover:scale-[1.02]; }
+  
+  .dark .app-info-card { @apply shadow-card hover:shadow-lg; }
+  .light .app-info-card { @apply shadow-card-light hover:shadow-hover-light; }
+  
   .app-info-title { @apply text-xl font-semibold mb-3 font-heading; }
   .app-info-text { @apply mb-5 leading-relaxed font-ui text-base; }
   
@@ -156,10 +171,10 @@
   .light .app-about-wrapper { @apply bg-gray-50 border-gray-300; }
   
   .app-about-section { @apply w-full flex justify-center; }
-  .app-about-card { @apply max-w-about-card w-full p-5 border; }
+  .app-about-card { @apply max-w-about-card w-full p-5 border transition-all duration-300 ease-in-out hover:scale-[1.02]; }
   
-  .dark .app-about-card { @apply bg-white-3 border-white-5; }
-  .light .app-about-card { @apply bg-white border-gray-300; }
+  .dark .app-about-card { @apply bg-white-3 border-white-5 hover:shadow-lg; }
+  .light .app-about-card { @apply bg-white border-gray-300 shadow-card-light hover:shadow-hover-light; }
   
   .app-about-title { @apply text-lg font-semibold mb-3 font-heading; }
   
@@ -208,7 +223,11 @@
   .light .app-footer-credits { @apply text-gray-700; }
   
   /* StatusInfo компонент */
-  .status-info-card { @apply p-6 text-center min-h-status flex flex-col justify-center -ml-[5px]; }
+  .status-info-card { @apply p-6 text-center min-h-status flex flex-col justify-center -ml-[5px] transition-all duration-300 ease-in-out hover:scale-[1.02]; }
+  
+  .dark .status-info-card { @apply shadow-card hover:shadow-lg; }
+  .light .status-info-card { @apply shadow-card-light hover:shadow-hover-light; }
+  
   .status-info-container { @apply flex flex-col items-center justify-center gap-3; }
   .status-info-status { @apply flex items-center gap-3 font-ui text-lg font-medium; }
   
@@ -226,7 +245,10 @@
   .light .status-info-time { @apply text-gray-700; }
   
   /* DonationCard компонент */
-  .donation-card { @apply w-full max-w-[400px] -mr-[5px]; }
+  .donation-card { @apply w-full max-w-[400px] -mr-[5px] transition-all duration-300 ease-in-out hover:scale-[1.01]; }
+  
+  .dark .donation-card { @apply hover:shadow-lg; }
+  .light .donation-card { @apply hover:shadow-hover-light; }
   
   /* Шапка картки має темний фон в обох темах для кращої контрастності */
   .donation-card-header { @apply p-4 bg-secondary text-center rounded-t-card; }
@@ -249,7 +271,10 @@
   }
   
   .donation-card-content { @apply p-6 flex flex-col items-center gap-6; }
-  .donation-card-qr { @apply p-4 bg-white rounded-lg shadow-qr; }
+  .donation-card-qr { @apply p-4 bg-white rounded-lg transition-all duration-300 ease-in-out hover:scale-[1.02]; }
+  
+  .dark .donation-card-qr { @apply shadow-qr hover:shadow-lg; }
+  .light .donation-card-qr { @apply shadow-qr-light hover:shadow-hover-light; }
   
   .donation-card-qr-placeholder {
     @apply w-[180px] h-[180px] flex items-center justify-center bg-gray-100 rounded-lg;
@@ -259,10 +284,10 @@
   
   /* Статистика донацій */
   .donation-card-stats { @apply flex justify-center gap-4 w-full; }
-  .donation-card-stat { @apply flex-1 rounded-xl p-4 py-3 flex flex-col items-center; }
+  .donation-card-stat { @apply flex-1 rounded-xl p-4 py-3 flex flex-col items-center transition-all duration-300 ease-in-out hover:scale-[1.02]; }
   
-  .dark .donation-card-stat { @apply bg-white-5; }
-  .light .donation-card-stat { @apply bg-gray-100; }
+  .dark .donation-card-stat { @apply bg-white-5 hover:shadow-lg; }
+  .light .donation-card-stat { @apply bg-gray-100 shadow-sm hover:shadow-qr-light; }
   
   .donation-card-stat-label { @apply text-sm mb-1 font-ui font-medium; }
   
@@ -296,6 +321,51 @@
   
   .dark .donation-card-progress-percent { @apply text-primary; }
   .light .donation-card-progress-percent { @apply text-black; }
+
+  /* NotificationPrompt компонент */
+  .notification-prompt {
+    @apply fixed bottom-4 right-4 z-50 max-w-[350px] rounded-lg shadow-lg overflow-hidden transition-all duration-300 ease-in-out;
+  }
+  
+  .dark .notification-prompt {
+    @apply bg-[#222222] border border-white-10 text-white;
+  }
+  
+  .light .notification-prompt {
+    @apply bg-white border border-gray-200 text-black shadow-card-light;
+  }
+  
+  .notification-prompt-content {
+    @apply p-4 flex flex-col gap-3;
+  }
+  
+  .notification-prompt-message {
+    @apply text-sm font-medium;
+  }
+  
+  .notification-prompt-actions {
+    @apply flex gap-2 justify-end;
+  }
+  
+  .notification-prompt-button {
+    @apply py-2 px-4 rounded-md text-sm font-medium transition-all duration-200;
+  }
+  
+  .notification-prompt-allow {
+    @apply bg-primary text-black hover:bg-dark-primary;
+  }
+  
+  .notification-prompt-dismiss {
+    @apply hover:bg-gray-100;
+  }
+  
+  .dark .notification-prompt-dismiss {
+    @apply text-white-80 hover:bg-white-10;
+  }
+  
+  .light .notification-prompt-dismiss {
+    @apply text-gray-700 hover:bg-gray-100;
+  }
 }
 
 /* Media queries */
