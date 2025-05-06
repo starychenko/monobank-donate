@@ -13,6 +13,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const DEFAULT_JAR_URL = process.env.DEFAULT_JAR_URL || '';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_PRODUCTION = NODE_ENV === 'production';
 
 // Безпека: Встановлюємо заголовки безпеки за допомогою Helmet
 app.use(helmet());
@@ -32,17 +34,97 @@ app.use(express.json({ limit: '10kb' }));
 // Безпека: чистка даних від XSS
 app.use(xss());
 
-// Налаштування рейт-лімітингу
-const apiLimiter = rateLimit({
+// Функція для створення власного повідомлення про перевищення ліміту
+const createLimitMessage = (endpoint: string, windowMin: number, maxRequests: number): string => {
+  return `Забагато запитів до ${endpoint}. Максимум ${maxRequests} запитів за ${windowMin} хвилин. Спробуйте пізніше.`;
+};
+
+// Функція для журналювання спроб перевищення ліміту
+const logRateLimitExceeded = (req: Request, res: Response, next: NextFunction): void => {
+  if (res.statusCode === 429) {
+    console.warn(`Rate limit exceeded: ${req.method} ${req.originalUrl} from IP ${req.ip}`);
+  }
+  next();
+};
+
+// НАЛАШТУВАННЯ RATE LIMITING
+
+// 1. Базовий лімітер для всіх API запитів
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 хвилин
-  max: 100, // Максимальна кількість запитів з однієї IP адреси
-  standardHeaders: true, // Повертає інформацію про ліміт в заголовках `RateLimit-*`
-  legacyHeaders: false, // Відключає заголовки `X-RateLimit-*`
-  message: 'Забагато запитів з цієї IP адреси, спробуйте пізніше',
+  max: IS_PRODUCTION ? 300 : 1000, // Більш жорсткий в production
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: createLimitMessage('API', 15, IS_PRODUCTION ? 300 : 1000),
+  skip: (req, res) => !IS_PRODUCTION && req.ip === '127.0.0.1', // В розробці пропускаємо локальні запити
+  keyGenerator: (req) => {
+    // Використовуємо або X-Forwarded-For, або IP
+    return (req.headers['x-forwarded-for'] as string || req.ip || 'unknown-ip');
+  }
 });
 
-// Застосовуємо рейт-лімітинг до всіх запитів API
-app.use('/api/', apiLimiter);
+// 2. Суворіший лімітер для конкретного ендпоінту з парсингом
+const parseMonobankLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 хвилин
+  max: IS_PRODUCTION ? 30 : 100, // Максимум 30 запитів за 5 хвилин в production
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: createLimitMessage('parse-monobank', 5, IS_PRODUCTION ? 30 : 100),
+  skipSuccessfulRequests: false, // Лічимо всі запити, не лише успішні
+  skipFailedRequests: false, // Лічимо навіть невдалі запити  
+  // Зберігаємо IP в нормалізованому вигляді для запобігання обходу
+  keyGenerator: (req) => {
+    const forwardedFor = req.headers['x-forwarded-for'] as string;
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : req.ip;
+    return `${ip}:parse-monobank`;
+  },
+  handler: (req, res, next, options) => {
+    // Записуємо інформацію про спроби перевищення ліміту
+    console.warn(`Rate limit exceeded for parse-monobank: IP ${req.ip}, UA: ${req.headers['user-agent']}`);
+    res.status(429).json({
+      error: 'Too many requests',
+      message: options.message,
+      retryAfter: Math.ceil(options.windowMs / 1000 / 60) // В хвилинах
+    });
+  }
+});
+
+// 3. Екстремальний лімітер для захисту від потенційних атак
+const bruteForceProtectionLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 хвилина
+  max: IS_PRODUCTION ? 20 : 50, // Максимум 20 запитів за 1 хвилину в production
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Підозріла активність. Ваш доступ тимчасово обмежено.',
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  // Використання функції для блокування IP при перевищенні
+  handler: (req, res, next, options) => {
+    // Можна додати логіку блокування в базі даних або кеші
+    console.error(`Potential attack detected: IP ${req.ip}, UA: ${req.headers['user-agent']}`);
+    res.status(429).json({
+      error: 'Access temporarily denied',
+      message: options.message
+    });
+  }
+});
+
+// Застосовуємо ієрархію лімітерів
+app.use('/api/', globalLimiter, logRateLimitExceeded);
+app.use('/api/parse-monobank', parseMonobankLimiter, bruteForceProtectionLimiter);
+
+// Встановлюємо проміжне ПЗ для логування запитів (спрощений аналог morgan)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const logLevel = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    console[logLevel](
+      `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms IP:${req.ip}`
+    );
+  });
+  next();
+});
 
 // Валідація вхідних даних
 const validateMonobankUrl = [
@@ -153,5 +235,5 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`Server started on port ${PORT} in ${NODE_ENV} mode`);
 }); 
