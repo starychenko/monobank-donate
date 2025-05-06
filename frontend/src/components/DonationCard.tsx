@@ -12,7 +12,7 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
     <div className="card donation-card">
       {/* Заголовок */}
       <div className="donation-card-header">
-        <h2 className="donation-card-title">
+        <h2 className="donation-card-title not-italic">
           Скануй QR-код
         </h2>
       </div>

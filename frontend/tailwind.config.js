@@ -14,6 +14,7 @@ export default {
         'bg-dark': '#111111',
         'text-light': '#f5f5f5',
         'mono-yellow': '#FFD100',
+        'mono-yellow-dark': '#E6BC00',
         'mono-black': '#000000',
         'white': {
           DEFAULT: '#ffffff',
@@ -53,7 +54,7 @@ export default {
         '2xl': '1.5rem',     // 24px
         '3xl': '1.875rem',   // 30px
         '4xl': '2.25rem',    // 36px
-        'card-title': '22px',
+        'card-title': '1.375rem',  // 22px -> переведено в rem для кращої чіткості
       },
       fontWeight: {
         'normal': '400',

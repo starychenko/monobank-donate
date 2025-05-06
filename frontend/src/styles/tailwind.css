@@ -53,55 +53,30 @@
     @apply text-black;
   }
 
-  h1 {
-    @apply text-4xl font-extrabold;
-  }
+  h1 { @apply text-4xl font-extrabold; }
+  h2 { @apply text-3xl font-bold; }
+  h3 { @apply text-2xl font-semibold; }
+  h4 { @apply text-xl font-semibold; }
 
-  h2 {
-    @apply text-3xl font-bold;
-  }
-
-  h3 {
-    @apply text-2xl font-semibold;
-  }
-
-  h4 {
-    @apply text-xl font-semibold;
-  }
-
-  p {
-    @apply mb-4 max-w-[65ch];
-  }
-
-  #root {
-    @apply min-h-screen flex flex-col;
-  }
-
+  p { @apply mb-4 max-w-[65ch]; }
+  #root { @apply min-h-screen flex flex-col; }
+  
   button {
     @apply font-ui font-medium cursor-pointer;
     all: unset;
   }
 
-  a {
-    @apply text-inherit no-underline;
-  }
-
-  code, pre, .monospace {
-    @apply font-mono text-[0.9em];
-  }
+  a { @apply text-inherit no-underline; }
+  code, pre, .monospace { @apply font-mono text-[0.9em]; }
   
-  /* Додаємо стилі для переходів */
-  p, span, div {
-    @apply transition-colors duration-theme ease-theme;
-  }
-  
-  svg {
-    @apply transition-[filter] duration-theme ease-theme;
-  }
+  /* Стилі для плавних переходів */
+  p, span, div { @apply transition-colors duration-theme ease-theme; }
+  svg { @apply transition-[filter] duration-theme ease-theme; }
 }
 
-/* Компонентні класи з використанням @apply */
+/* Компонентні класи */
 @layer components {
+  /* Картки */
   .card {
     @apply rounded-card overflow-hidden border transition-transform duration-300 ease-in-out hover:translate-y-[-5px];
   }
@@ -111,471 +86,254 @@
   }
   
   .light .card {
-    @apply bg-white shadow-md border-gray-100 text-black hover:shadow-xl;
+    @apply bg-white shadow-md border-gray-200 text-black hover:shadow-xl;
   }
   
+  /* Кнопки */
   .gradient-button {
     @apply text-black py-3 px-6 rounded-lg font-semibold inline-flex items-center transition-all duration-300 hover:translate-y-[-2px] text-sm tracking-wider;
   }
   
-  .dark .gradient-button {
-    @apply bg-gradient-primary hover:bg-gradient-dark;
-  }
+  .dark .gradient-button { @apply bg-gradient-primary hover:bg-gradient-dark; }
+  .light .gradient-button { @apply bg-primary hover:bg-dark-primary; }
   
-  .light .gradient-button {
-    @apply bg-primary hover:bg-dark-primary;
-  }
+  /* Контейнери та структура */
+  .app-container { @apply flex flex-col min-h-screen h-full transition-colors duration-theme ease-theme; }
+  .container { @apply w-full max-w-container mx-auto px-6; }
+  .app-content { @apply flex flex-col flex-1 mb-2 justify-center; }
+  .app-main { @apply flex flex-col items-center justify-center flex-1 min-h-main py-0 pb-2; }
+  .app-grid { @apply w-full grid gap-0 mb-4 max-w-container grid-cols-auto-fit; }
+  .app-card-container { @apply flex justify-center items-start pr-0; }
+  .app-info-container { @apply flex flex-col gap-3 items-stretch h-full pl-0; }
   
-  .app-container {
-    @apply flex flex-col min-h-screen h-full transition-colors duration-theme ease-theme;
-  }
-  
+  /* Хедер */
   .app-header {
     @apply py-3 flex justify-between items-center mb-2 w-full z-10 border-b transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-header {
-    @apply bg-dark-bg border-white-10;
-  }
+  .dark .app-header { @apply bg-dark-bg border-white-10; }
+  .light .app-header { @apply bg-white border-gray-300; }
   
-  .light .app-header {
-    @apply bg-white border-gray-100;
-  }
+  .header-container { @apply flex justify-between items-center w-full; }
   
-  .header-container {
-    @apply flex justify-between items-center w-full;
-  }
-  
+  /* Кнопка теми */
   .theme-toggle-button {
     @apply p-2 rounded-full cursor-pointer transition-all duration-300 ml-4;
   }
   
-  .dark .theme-toggle-button {
-    @apply hover:bg-white-10;
-  }
+  .dark .theme-toggle-button { @apply hover:bg-white-10 text-white; }
+  .light .theme-toggle-button { @apply hover:bg-gray-200 text-gray-800; }
   
-  .light .theme-toggle-button {
-    @apply hover:bg-gray-100;
-  }
+  /* Заголовок додатку */
+  .app-title { @apply text-3xl font-bold flex items-center font-heading tracking-tight m-0; }
+  .app-title-mono { @apply font-bold; }
+  .app-title-bank { @apply font-bold; }
+  .app-title-donate { @apply ml-2 font-normal; }
   
-  .container {
-    @apply w-full max-w-container mx-auto px-6;
-  }
+  .dark .app-title-mono { @apply text-text-light; }
+  .light .app-title-mono { @apply text-black; }
   
-  .app-title {
-    @apply text-3xl font-bold flex items-center font-heading tracking-tight m-0;
-  }
+  .dark .app-title-bank { @apply text-mono-yellow; }
+  .light .app-title-bank { @apply text-black; }
   
-  .app-title-mono {
-    @apply font-bold;
-  }
+  .dark .app-title-donate { @apply text-white-70; }
+  .light .app-title-donate { @apply text-gray-600; }
   
-  .dark .app-title-mono {
-    @apply text-text-light;
-  }
+  /* Інформаційна картка */
+  .app-info-card { @apply p-5 -ml-[5px]; }
+  .app-info-title { @apply text-xl font-semibold mb-3 font-heading; }
+  .app-info-text { @apply mb-5 leading-relaxed font-ui text-base; }
   
-  .light .app-title-mono {
-    @apply text-black;
-  }
+  .dark .app-info-text { @apply text-white-80; }
+  .light .app-info-text { @apply text-gray-800; }
   
-  .app-title-bank {
-    @apply font-bold text-mono-yellow;
-  }
-  
-  .app-title-donate {
-    @apply ml-2 font-normal;
-  }
-  
-  .dark .app-title-donate {
-    @apply text-white-70;
-  }
-  
-  .light .app-title-donate {
-    @apply text-gray-600;
-  }
-  
-  .app-content {
-    @apply flex flex-col flex-1 mb-2 justify-center;
-  }
-  
-  .app-main {
-    @apply flex flex-col items-center justify-center flex-1 min-h-main py-0 pb-2;
-  }
-  
-  .app-grid {
-    @apply w-full grid gap-0 mb-4 max-w-container grid-cols-auto-fit;
-  }
-  
-  .app-card-container {
-    @apply flex justify-center items-start pr-0;
-  }
-  
-  .app-info-container {
-    @apply flex flex-col gap-3 items-stretch h-full pl-0;
-  }
-  
-  .app-info-card {
-    @apply p-5 -ml-[5px];
-  }
-  
-  .app-info-title {
-    @apply text-xl font-semibold mb-3 font-heading;
-  }
-  
-  .app-info-text {
-    @apply mb-5 leading-relaxed font-ui text-base;
-  }
-  
-  .dark .app-info-text {
-    @apply text-white-80;
-  }
-  
-  .light .app-info-text {
-    @apply text-gray-600;
-  }
-  
+  /* Секція "Про проект" */
   .app-about-wrapper {
     @apply w-full mt-2 py-5 border-t transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-about-wrapper {
-    @apply bg-dark-section border-white-3;
-  }
+  .dark .app-about-wrapper { @apply bg-dark-section border-white-3; }
+  .light .app-about-wrapper { @apply bg-gray-50 border-gray-300; }
   
-  .light .app-about-wrapper {
-    @apply bg-gray-50 border-gray-100;
-  }
-
-  .app-about-section {
-    @apply w-full flex justify-center;
-  }
-
-  .app-about-card {
-    @apply max-w-about-card w-full p-5 border;
-  }
+  .app-about-section { @apply w-full flex justify-center; }
+  .app-about-card { @apply max-w-about-card w-full p-5 border; }
   
-  .dark .app-about-card {
-    @apply bg-white-3 border-white-5;
-  }
+  .dark .app-about-card { @apply bg-white-3 border-white-5; }
+  .light .app-about-card { @apply bg-white border-gray-300; }
   
-  .light .app-about-card {
-    @apply bg-white border-gray-100;
-  }
-
-  .app-about-title {
-    @apply text-lg font-semibold mb-3 font-heading text-mono-yellow;
-  }
-
-  .app-about-text {
-    @apply mb-0 leading-relaxed font-ui text-sm;
-  }
+  .app-about-title { @apply text-lg font-semibold mb-3 font-heading; }
   
-  .dark .app-about-text {
-    @apply text-white-70;
-  }
+  .dark .app-about-title { @apply text-mono-yellow; }
+  .light .app-about-title { @apply text-black; }
   
-  .light .app-about-text {
-    @apply text-gray-600;
-  }
-
-  .button-icon {
-    @apply w-4 h-4 ml-2;
-  }
+  .app-about-text { @apply mb-0 leading-relaxed font-ui text-sm; }
   
+  .dark .app-about-text { @apply text-white-70; }
+  .light .app-about-text { @apply text-gray-800; }
+  
+  .button-icon { @apply w-4 h-4 ml-2; }
+  
+  /* Футер */
   .app-footer {
     @apply w-full text-center py-4 border-t transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-footer {
-    @apply text-white-70 border-white-10 bg-dark-bg;
-  }
+  .dark .app-footer { @apply text-white-70 border-white-10 bg-dark-bg; }
+  .light .app-footer { @apply text-gray-600 border-gray-300 bg-white; }
   
-  .light .app-footer {
-    @apply text-gray-600 border-gray-100 bg-white;
-  }
+  .app-footer-content { @apply flex items-center justify-center gap-3 font-ui font-medium text-sm; }
+  .app-footer-brand { @apply flex items-center; }
+  .app-footer-year { @apply mr-[0.35rem]; }
+  .app-footer-mono { @apply font-bold; }
+  .app-footer-bank { @apply font-bold; }
+  .app-footer-donate { @apply ml-2 font-normal; }
   
-  .app-footer-content {
-    @apply flex items-center justify-center gap-3 font-ui font-medium text-sm;
-  }
+  .dark .app-footer-mono { @apply text-text-light; }
+  .light .app-footer-mono { @apply text-black; }
   
-  .app-footer-brand {
-    @apply flex items-center;
-  }
-
-  .app-footer-year {
-    @apply mr-[0.35rem];
-  }
-
-  .app-footer-mono {
-    @apply font-bold;
-  }
+  .dark .app-footer-bank { @apply text-mono-yellow; }
+  .light .app-footer-bank { @apply text-black; }
   
-  .dark .app-footer-mono {
-    @apply text-text-light;
-  }
+  .dark .app-footer-donate { @apply text-white-70; }
+  .light .app-footer-donate { @apply text-gray-600; }
   
-  .light .app-footer-mono {
-    @apply text-black;
-  }
-
-  .app-footer-bank {
-    @apply font-bold text-mono-yellow;
-  }
-
-  .app-footer-donate {
-    @apply ml-2 font-normal;
-  }
+  .app-footer-separator { @apply text-white-50; }
   
-  .dark .app-footer-donate {
-    @apply text-white-70;
-  }
+  .dark .app-footer-separator { @apply text-white-50; }
+  .light .app-footer-separator { @apply text-gray-400; }
   
-  .light .app-footer-donate {
-    @apply text-gray-600;
-  }
-
-  .app-footer-separator {
-    @apply text-white-50;
-  }
+  .app-footer-credits { @apply text-white-70; }
   
-  .dark .app-footer-separator {
-    @apply text-white-50;
-  }
-  
-  .light .app-footer-separator {
-    @apply text-gray-400;
-  }
-
-  .app-footer-credits {
-    @apply text-white-70;
-  }
-  
-  .dark .app-footer-credits {
-    @apply text-white-70;
-  }
-  
-  .light .app-footer-credits {
-    @apply text-gray-600;
-  }
+  .dark .app-footer-credits { @apply text-white-70; }
+  .light .app-footer-credits { @apply text-gray-700; }
   
   /* StatusInfo компонент */
-  .status-info-card {
-    @apply p-6 text-center min-h-status flex flex-col justify-center -ml-[5px];
-  }
+  .status-info-card { @apply p-6 text-center min-h-status flex flex-col justify-center -ml-[5px]; }
+  .status-info-container { @apply flex flex-col items-center justify-center gap-3; }
+  .status-info-status { @apply flex items-center gap-3 font-ui text-lg font-medium; }
   
-  .status-info-container {
-    @apply flex flex-col items-center justify-center gap-3;
-  }
+  .dark .status-info-status { @apply text-white-90; }
+  .light .status-info-status { @apply text-gray-900; }
   
-  .status-info-status {
-    @apply flex items-center gap-3 font-ui text-lg font-medium;
-  }
+  .status-info-loading { @apply w-6 h-6 rounded-full border-[3px] border-t-primary spinner; }
   
-  .dark .status-info-status {
-    @apply text-white-90;
-  }
+  .dark .status-info-loading { @apply border-black-10; }
+  .light .status-info-loading { @apply border-gray-200; }
   
-  .light .status-info-status {
-    @apply text-gray-800;
-  }
+  .status-info-time { @apply text-sm flex gap-2 items-center font-ui font-normal; }
   
-  .status-info-loading {
-    @apply w-6 h-6 rounded-full border-[3px] border-t-primary spinner;
-  }
-  
-  .dark .status-info-loading {
-    @apply border-black-10;
-  }
-  
-  .light .status-info-loading {
-    @apply border-gray-200;
-  }
-  
-  .status-info-time {
-    @apply text-sm flex gap-2 items-center font-ui font-normal;
-  }
-  
-  .dark .status-info-time {
-    @apply text-white-60;
-  }
-  
-  .light .status-info-time {
-    @apply text-gray-500;
-  }
+  .dark .status-info-time { @apply text-white-60; }
+  .light .status-info-time { @apply text-gray-700; }
   
   /* DonationCard компонент */
-  .donation-card {
-    @apply w-full max-w-[400px] -mr-[5px];
-  }
+  .donation-card { @apply w-full max-w-[400px] -mr-[5px]; }
   
-  .donation-card-header {
-    @apply p-4 bg-mono-yellow text-black text-center rounded-t-card;
-  }
+  /* Шапка картки має темний фон в обох темах для кращої контрастності */
+  .donation-card-header { @apply p-4 bg-secondary text-center rounded-t-card; }
   
+  /* Базові стилі заголовку */
   .donation-card-title {
-    @apply text-card-title font-bold m-0 tracking-card text-black;
+    @apply text-card-title font-bold m-0 tracking-card text-white;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0.01em;
   }
   
-  .donation-card-content {
-    @apply p-6 flex flex-col items-center gap-6;
+  /* Явне перевизначення для обох тем для уникнення конфліктів з іншими стилями */
+  .dark .donation-card-title {
+    @apply text-white;
   }
   
-  .donation-card-qr {
-    @apply p-4 bg-white rounded-lg shadow-qr;
+  .light .donation-card-title {
+    @apply text-white;
   }
+  
+  .donation-card-content { @apply p-6 flex flex-col items-center gap-6; }
+  .donation-card-qr { @apply p-4 bg-white rounded-lg shadow-qr; }
   
   .donation-card-qr-placeholder {
     @apply w-[180px] h-[180px] flex items-center justify-center bg-gray-100 rounded-lg;
   }
   
-  .donation-card-qr-placeholder-text {
-    @apply text-sm text-gray-600 font-ui;
-  }
+  .donation-card-qr-placeholder-text { @apply text-sm text-gray-600 font-ui; }
   
-  .donation-card-stats {
-    @apply flex justify-center gap-4 w-full;
-  }
+  /* Статистика донацій */
+  .donation-card-stats { @apply flex justify-center gap-4 w-full; }
+  .donation-card-stat { @apply flex-1 rounded-xl p-4 py-3 flex flex-col items-center; }
   
-  .donation-card-stat {
-    @apply flex-1 rounded-xl p-4 py-3 flex flex-col items-center;
-  }
+  .dark .donation-card-stat { @apply bg-white-5; }
+  .light .donation-card-stat { @apply bg-gray-100; }
   
-  .dark .donation-card-stat {
-    @apply bg-white-5;
-  }
+  .donation-card-stat-label { @apply text-sm mb-1 font-ui font-medium; }
   
-  .light .donation-card-stat {
-    @apply bg-gray-50;
-  }
+  .dark .donation-card-stat-label { @apply text-white-50; }
+  .light .donation-card-stat-label { @apply text-gray-700; }
   
-  .donation-card-stat-label {
-    @apply text-sm mb-1 font-ui font-medium;
-  }
+  .donation-card-stat-value { @apply font-bold text-xl font-ui; }
   
-  .dark .donation-card-stat-label {
-    @apply text-white-50;
-  }
+  .dark .donation-card-stat-value { @apply text-primary; }
+  .light .donation-card-stat-value { @apply text-black; }
   
-  .light .donation-card-stat-label {
-    @apply text-gray-500;
-  }
+  /* Прогрес-бар */
+  .donation-card-progress { @apply w-full mt-1; }
+  .donation-card-progress-bar { @apply w-full h-[0.6rem] rounded-full overflow-hidden; }
   
-  .donation-card-stat-value {
-    @apply font-bold text-xl text-primary font-ui;
-  }
+  .dark .donation-card-progress-bar { @apply bg-white-10; }
+  .light .donation-card-progress-bar { @apply bg-gray-200; }
   
-  .donation-card-progress {
-    @apply w-full mt-1;
-  }
+  .donation-card-progress-value { @apply h-full transition-all duration-1000 animated-gradient; }
   
-  .donation-card-progress-bar {
-    @apply w-full h-[0.6rem] rounded-full overflow-hidden;
-  }
+  .dark .donation-card-progress-value { @apply bg-gradient-primary; }
+  .light .donation-card-progress-value { @apply bg-primary; }
   
-  .dark .donation-card-progress-bar {
-    @apply bg-white-10;
-  }
+  .donation-card-progress-text { @apply flex justify-between items-center mt-2; }
+  .donation-card-progress-label { @apply text-sm font-ui; }
   
-  .light .donation-card-progress-bar {
-    @apply bg-gray-100;
-  }
+  .dark .donation-card-progress-label { @apply text-white-50; }
+  .light .donation-card-progress-label { @apply text-gray-700; }
   
-  .donation-card-progress-value {
-    @apply h-full bg-gradient-primary transition-all duration-1000 animated-gradient;
-  }
+  .donation-card-progress-percent { @apply text-sm font-medium font-ui; }
   
-  .donation-card-progress-text {
-    @apply flex justify-between items-center mt-2;
-  }
-  
-  .donation-card-progress-label {
-    @apply text-sm font-ui;
-  }
-  
-  .dark .donation-card-progress-label {
-    @apply text-white-50;
-  }
-  
-  .light .donation-card-progress-label {
-    @apply text-gray-500;
-  }
-  
-  .donation-card-progress-percent {
-    @apply text-sm font-medium text-primary font-ui;
-  }
+  .dark .donation-card-progress-percent { @apply text-primary; }
+  .light .donation-card-progress-percent { @apply text-black; }
 }
 
 /* Media queries */
 @layer utilities {
+  /* Мобільні пристрої */
   @media screen and (max-width: 768px) {
-    .app-grid {
-      @apply grid-cols-1 gap-4 px-2;
-    }
-    
-    .app-main {
-      @apply pt-2;
-    }
-    
-    .app-header {
-      @apply py-2;
-    }
-    
-    .app-title {
-      @apply text-2xl;
-    }
+    .app-grid { @apply grid-cols-1 gap-4 px-2; }
+    .app-main { @apply pt-2; }
+    .app-header { @apply py-2; }
+    .app-title { @apply text-2xl; }
   }
   
+  /* Планшети */
   @media screen and (min-width: 769px) and (max-width: 1200px) {
-    .app-grid {
-      @apply gap-4 px-4;
-    }
+    .app-grid { @apply gap-4 px-4; }
   }
   
+  /* Десктопи */
   @media screen and (min-width: 1201px) {
-    .app-grid {
-      @apply gap-6;
-    }
+    .app-grid { @apply gap-6; }
   }
   
+  /* Загальні середні та великі екрани */
   @media screen and (min-width: 769px) {
-    .app-grid {
-      @apply grid-cols-2;
-    }
-    
+    .app-grid { @apply grid-cols-2; }
     .app-card-container, 
-    .app-info-container {
-      @apply p-4;
-    }
+    .app-info-container { @apply p-4; }
   }
   
+  /* Великі екрани */
   @media screen and (min-width: 2000px) {
-    .app-container {
-      @apply text-lg;
-    }
-    
-    .app-content {
-      @apply max-w-[1800px] mx-auto;
-    }
-    
-    .app-grid {
-      @apply gap-8 max-w-[1600px];
-    }
-    
-    .app-header {
-      @apply py-4;
-    }
-    
-    .app-title {
-      @apply text-4xl;
-    }
-    
-    .app-about-wrapper {
-      @apply py-6;
-    }
-    
-    .app-footer {
-      @apply py-5;
-    }
+    .app-container { @apply text-lg; }
+    .app-content { @apply max-w-[1800px] mx-auto; }
+    .app-grid { @apply gap-8 max-w-[1600px]; }
+    .app-header { @apply py-4; }
+    .app-title { @apply text-4xl; }
+    .app-about-wrapper { @apply py-6; }
+    .app-footer { @apply py-5; }
   }
 }
 
@@ -585,9 +343,7 @@
   to { transform: rotate(360deg); }
 }
 
-.spinner {
-  animation: spin 1s linear infinite;
-}
+.spinner { animation: spin 1s linear infinite; }
 
 @keyframes progressAnimation {
   0% { background-position: 0% 50%; }
@@ -601,30 +357,12 @@
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar {
-  @apply w-2;
-}
+::-webkit-scrollbar { @apply w-2; }
+::-webkit-scrollbar-track { @apply rounded-full; }
+::-webkit-scrollbar-thumb { @apply rounded-full; }
 
-::-webkit-scrollbar-track {
-  @apply rounded-full;
-}
+.dark ::-webkit-scrollbar-track { @apply bg-black-10; }
+.light ::-webkit-scrollbar-track { @apply bg-gray-100; }
 
-.dark ::-webkit-scrollbar-track {
-  @apply bg-black-10;
-}
-
-.light ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply rounded-full;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  @apply bg-primary/70 hover:bg-primary;
-}
-
-.light ::-webkit-scrollbar-thumb {
-  @apply bg-primary/80 hover:bg-primary;
-} 
+.dark ::-webkit-scrollbar-thumb { @apply bg-primary/70 hover:bg-primary; }
+.light ::-webkit-scrollbar-thumb { @apply bg-gray-400 hover:bg-gray-500; } 
