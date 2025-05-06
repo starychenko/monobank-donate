@@ -8,28 +8,43 @@ export default {
   theme: {
     extend: {
       colors: {
-        monobank: {
-          purple: 'rgb(var(--color-primary) / <alpha-value>)',
-          pink: 'rgb(var(--color-secondary) / <alpha-value>)',
-          'purple-dark': 'rgb(var(--color-dark-primary) / <alpha-value>)',
-          'bg-light': 'rgb(var(--color-bg-light) / <alpha-value>)',
-          'bg-dark': 'rgb(var(--color-bg-dark) / <alpha-value>)',
-        }
+        'primary': 'var(--primary-color)',
+        'secondary': 'var(--secondary-color)',
+        'dark-primary': 'var(--dark-primary)',
+        'bg-dark': 'var(--bg-dark)',
+        'text-light': 'var(--text-light)',
+        'mono-yellow': 'var(--mono-yellow)',
+        'mono-black': 'var(--mono-black)',
+      },
+      fontFamily: {
+        'ui': 'var(--font-ui)',
+        'heading': 'var(--font-heading)',
+        'mono': 'var(--font-mono)',
+      },
+      fontSize: {
+        'xs': 'var(--font-size-xs)',
+        'sm': 'var(--font-size-sm)',
+        'base': 'var(--font-size-base)',
+        'lg': 'var(--font-size-lg)',
+        'xl': 'var(--font-size-xl)',
+        '2xl': 'var(--font-size-2xl)',
+        '3xl': 'var(--font-size-3xl)',
+        '4xl': 'var(--font-size-4xl)',
+      },
+      backgroundImage: {
+        'gradient-primary': 'var(--gradient)',
+        'gradient-dark': 'var(--gradient-dark)',
+      },
+      borderRadius: {
+        'card': 'var(--border-radius)',
+      },
+      boxShadow: {
+        'card': 'var(--card-shadow)',
       },
       screens: {
         '3xl': '1920px',
         '4xl': '2560px',
       },
-      fontSize: {
-        '4k-base': '1.2rem',
-        '4k-lg': '1.5rem',
-        '4k-xl': '2rem',
-        '4k-2xl': '2.5rem',
-      },
-      backgroundImage: {
-        'gradient-monobank': 'linear-gradient(to right, rgb(var(--color-primary)), rgb(var(--color-secondary)))',
-        'gradient-monobank-dark': 'linear-gradient(to right, rgb(var(--color-dark-primary)), rgb(var(--color-primary)))',
-      }
     },
   },
   plugins: [],

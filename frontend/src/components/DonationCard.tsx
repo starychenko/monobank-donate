@@ -9,36 +9,18 @@ interface DonationCardProps {
 
 export function DonationCard({ collected, target, jarUrl, progress }: DonationCardProps) {
   return (
-    <div className="card" style={{ width: '100%', maxWidth: '400px', marginRight: '-5px' }}>
+    <div className="card donation-card">
       {/* Заголовок */}
-      <div style={{ 
-        padding: '16px', 
-        background: '#ffd100',
-        color: '#000000',
-        textAlign: 'center',
-        borderTopLeftRadius: 'var(--border-radius)',
-        borderTopRightRadius: 'var(--border-radius)'
-      }}>
-        <h2 style={{ 
-          fontSize: '22px', 
-          fontWeight: 700,
-          margin: 0,
-          letterSpacing: '0.03em',
-          color: '#000000'
-        }}>
+      <div className="donation-card-header">
+        <h2 className="donation-card-title">
           Скануй QR-код
         </h2>
       </div>
 
       {/* QR-код і дані */}
-      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+      <div className="donation-card-content">
         {/* QR-код */}
-        <div style={{ 
-          padding: '1rem', 
-          backgroundColor: 'white', 
-          borderRadius: '0.5rem', 
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)' 
-        }}>
+        <div className="donation-card-qr">
           {jarUrl ? (
             <QRCode 
               value={jarUrl} 
@@ -48,115 +30,45 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
             />
           ) : (
-            <div style={{ 
-              width: '180px', 
-              height: '180px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              backgroundColor: '#f1f1f1', 
-              borderRadius: '0.5rem' 
-            }}>
-              <span style={{ 
-                fontSize: 'var(--font-size-sm)', 
-                color: '#666',
-                fontFamily: 'var(--font-ui)'
-              }}>QR код недоступний</span>
+            <div className="donation-card-qr-placeholder">
+              <span className="donation-card-qr-placeholder-text">QR код недоступний</span>
             </div>
           )}
         </div>
 
         {/* Суми в картках */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', width: '100%' }}>
-          <div style={{ 
-            flex: 1, 
-            backgroundColor: 'rgba(255,255,255,0.05)', 
-            borderRadius: '0.75rem', 
-            padding: '1rem 0.75rem', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center' 
-          }}>
-            <span style={{ 
-              fontSize: 'var(--font-size-sm)', 
-              color: 'rgba(255,255,255,0.5)', 
-              marginBottom: '0.25rem',
-              fontFamily: 'var(--font-ui)',
-              fontWeight: 'var(--font-weight-medium)'
-            }}>
+        <div className="donation-card-stats">
+          <div className="donation-card-stat">
+            <span className="donation-card-stat-label">
               Накопичено
             </span>
-            <span style={{ 
-              fontWeight: 'var(--font-weight-bold)', 
-              fontSize: 'var(--font-size-xl)', 
-              color: 'var(--primary-color)',
-              fontFamily: 'var(--font-ui)'
-            }}>
+            <span className="donation-card-stat-value">
               {collected || '—'}
             </span>
           </div>
-          <div style={{ 
-            flex: 1, 
-            backgroundColor: 'rgba(255,255,255,0.05)', 
-            borderRadius: '0.75rem', 
-            padding: '1rem 0.75rem', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center' 
-          }}>
-            <span style={{ 
-              fontSize: 'var(--font-size-sm)', 
-              color: 'rgba(255,255,255,0.5)', 
-              marginBottom: '0.25rem',
-              fontFamily: 'var(--font-ui)',
-              fontWeight: 'var(--font-weight-medium)'
-            }}>
+          <div className="donation-card-stat">
+            <span className="donation-card-stat-label">
               Ціль
             </span>
-            <span style={{ 
-              fontWeight: 'var(--font-weight-bold)', 
-              fontSize: 'var(--font-size-xl)', 
-              color: 'var(--primary-color)',
-              fontFamily: 'var(--font-ui)'
-            }}>
+            <span className="donation-card-stat-value">
               {target || '—'}
             </span>
           </div>
         </div>
 
         {/* Прогрес-бар */}
-        <div style={{ width: '100%', marginTop: '0.25rem' }}>
-          <div style={{ 
-            width: '100%', 
-            height: '0.6rem', 
-            backgroundColor: 'rgba(255,255,255,0.1)', 
-            borderRadius: '9999px', 
-            overflow: 'hidden' 
-          }}>
+        <div className="donation-card-progress">
+          <div className="donation-card-progress-bar">
             <div
-              className="animated-gradient"
-              style={{ 
-                height: '100%', 
-                width: `${progress}%`, 
-                background: 'var(--gradient)',
-                transition: 'width 1s ease-in-out' 
-              }}
+              className="animated-gradient donation-card-progress-value"
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-            <span style={{ 
-              fontSize: 'var(--font-size-sm)', 
-              color: 'rgba(255,255,255,0.5)',
-              fontFamily: 'var(--font-ui)'
-            }}>
+          <div className="donation-card-progress-text">
+            <span className="donation-card-progress-label">
               Прогрес
             </span>
-            <span style={{ 
-              fontSize: 'var(--font-size-sm)', 
-              fontWeight: 'var(--font-weight-medium)', 
-              color: 'var(--primary-color)',
-              fontFamily: 'var(--font-ui)'
-            }}>
+            <span className="donation-card-progress-percent">
               {progress.toFixed(1)}%
             </span>
           </div>
