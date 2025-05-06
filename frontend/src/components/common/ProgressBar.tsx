@@ -1,5 +1,12 @@
 import { memo } from 'react';
 
+/**
+ * Інтерфейс для властивостей компонента ProgressBar
+ * 
+ * @property {number} progress - Відсоток прогресу (від 0 до 100)
+ * @property {boolean} [showPercentage=true] - Чи відображати відсоток прогресу текстом
+ * @property {string} [label='Прогрес'] - Текстова мітка для прогрес-бару
+ */
 interface ProgressBarProps {
   progress: number;
   showPercentage?: boolean;
@@ -8,7 +15,27 @@ interface ProgressBarProps {
 
 /**
  * Компонент ProgressBar - відображає прогрес-бар з відсотком виконання
- * Мемоізований для оптимізації продуктивності
+ * 
+ * Відображає горизонтальний прогрес-бар з анімацією заповнення та
+ * опціональним показником відсотків. Мемоізований для оптимізації продуктивності,
+ * щоб запобігти зайвим рендерам при незмінних властивостях.
+ * 
+ * @param {ProgressBarProps} props - Властивості компонента
+ * @param {number} props.progress - Відсоток прогресу (від 0 до 100)
+ * @param {boolean} [props.showPercentage=true] - Чи відображати відсоток прогресу текстом
+ * @param {string} [props.label='Прогрес'] - Текстова мітка для прогрес-бару
+ * 
+ * @example
+ * // Базовий приклад
+ * <ProgressBar progress={75} />
+ * 
+ * @example
+ * // З кастомною міткою, без відсотків
+ * <ProgressBar 
+ *   progress={42} 
+ *   showPercentage={false} 
+ *   label="Завершено" 
+ * />
  */
 const ProgressBar = memo(function ProgressBar({ 
   progress, 

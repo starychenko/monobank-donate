@@ -2,6 +2,14 @@ import { memo } from 'react';
 import QRCode from 'react-qr-code';
 import { ProgressBar } from '../common/ProgressBar';
 
+/**
+ * Інтерфейс для властивостей компонента DonationCard
+ * 
+ * @property {string|null} collected - Сума зібраних коштів у форматованому вигляді
+ * @property {string|null} target - Цільова сума збору у форматованому вигляді
+ * @property {string} jarUrl - URL посилання на банку Monobank для QR-коду
+ * @property {number} progress - Відсоток виконання збору (від 0 до 100)
+ */
 interface DonationCardProps {
   collected: string | null;
   target: string | null;
@@ -11,7 +19,26 @@ interface DonationCardProps {
 
 /**
  * Компонент DonationCard - відображає QR-код для пожертвування та статистику збору
- * Мемоізований для оптимізації продуктивності
+ * 
+ * Відображає картку з QR-кодом для швидкого доступу до сторінки збору коштів,
+ * а також інформацію про поточний статус збору: зібрану суму, цільову суму та
+ * прогрес-бар із відсотком виконання. Компонент мемоізований для оптимізації
+ * продуктивності при часткових оновленнях даних.
+ * 
+ * @param {DonationCardProps} props - Властивості компонента
+ * @param {string|null} props.collected - Сума зібраних коштів у форматованому вигляді
+ * @param {string|null} props.target - Цільова сума збору у форматованому вигляді
+ * @param {string} props.jarUrl - URL посилання на банку Monobank для QR-коду
+ * @param {number} props.progress - Відсоток виконання збору (від 0 до 100)
+ * 
+ * @example
+ * // Базовий приклад
+ * <DonationCard
+ *   collected="45 000 ₴"
+ *   target="100 000 ₴"
+ *   jarUrl="https://send.monobank.ua/jar/123456789"
+ *   progress={45}
+ * />
  */
 const DonationCard = memo(function DonationCard({ 
   collected, 

@@ -1,6 +1,15 @@
 import { useCountdown } from '../../hooks/useCountdown';
 import { useEffect, memo } from 'react';
 
+/**
+ * Інтерфейс для властивостей компонента StatusInfo
+ * 
+ * @property {boolean} loading - Стан завантаження даних
+ * @property {string|null} error - Текст помилки, якщо така сталася
+ * @property {number} updateInterval - Інтервал оновлення даних в мілісекундах
+ * @property {Date} [lastUpdated] - Час останнього успішного оновлення даних
+ * @property {Function} [onCountdownComplete] - Функція, що викликається при завершенні відліку
+ */
 interface StatusInfoProps {
   loading: boolean;
   error: string | null;
@@ -10,8 +19,37 @@ interface StatusInfoProps {
 }
 
 /**
- * Компонент StatusInfo - відображає статус оновлення даних та зворотний відлік до наступного оновлення
- * Мемоізований для оптимізації продуктивності
+ * Компонент StatusInfo - відображає статус оновлення даних та зворотний відлік
+ * 
+ * Відображає інформацію про стан завантаження даних, помилки (якщо є) та
+ * зворотний відлік до наступного оновлення. В залежності від стану змінює
+ * своє відображення і анімацію. Використовує хук useCountdown для керування
+ * відліком часу. Компонент мемоізований для оптимізації продуктивності.
+ * 
+ * @param {StatusInfoProps} props - Властивості компонента
+ * @param {boolean} props.loading - Стан завантаження даних
+ * @param {string|null} props.error - Текст помилки, якщо така сталася
+ * @param {number} props.updateInterval - Інтервал оновлення даних в мілісекундах
+ * @param {Date} [props.lastUpdated] - Час останнього успішного оновлення даних
+ * @param {Function} [props.onCountdownComplete] - Функція, що викликається при завершенні відліку
+ * 
+ * @example
+ * // Базовий приклад
+ * <StatusInfo
+ *   loading={false}
+ *   error={null}
+ *   updateInterval={15000}
+ *   lastUpdated={new Date()}
+ *   onCountdownComplete={() => fetchData()}
+ * />
+ * 
+ * @example
+ * // Приклад з помилкою
+ * <StatusInfo
+ *   loading={false}
+ *   error="Не вдалося підключитися до сервера"
+ *   updateInterval={15000}
+ * />
  */
 const StatusInfo = memo(function StatusInfo({ 
   loading, 

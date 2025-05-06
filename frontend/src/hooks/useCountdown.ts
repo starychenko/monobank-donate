@@ -1,12 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * Хук для створення зворотного відліку
- * @param duration - Тривалість відліку в мілісекундах
- * @param autoRestart - Чи потрібно автоматично перезапускати відлік
- * @param onComplete - Функція, яка викликається при завершенні відліку
- * @param resetOnChange - Якщо true, таймер перезапускається при зміні duration
- * @returns Об'єкт з секундами та функціями керування
+ * Хук для створення зворотного відліку з можливістю керування
+ * 
+ * @param {number} duration - Тривалість відліку в мілісекундах
+ * @param {boolean} [autoRestart=false] - Чи потрібно автоматично перезапускати відлік після завершення
+ * @param {Function} [onComplete] - Функція, яка викликається при завершенні відліку
+ * @param {boolean} [resetOnChange=false] - Якщо true, таймер перезапускається при зміні параметра duration
+ * @returns {Object} Об'єкт з даними та методами керування
+ * @returns {number} .seconds - Поточна кількість секунд
+ * @returns {Function} .restart - Функція для перезапуску відліку
+ * @returns {Function} .pause - Функція для паузи відліку
+ * @returns {Function} .resume - Функція для відновлення відліку
+ * @returns {boolean} .isRunning - Чи активний відлік в даний момент
+ * 
+ * @example
+ * // Базове використання
+ * const { seconds, isRunning } = useCountdown(15000);
+ * 
+ * @example
+ * // З автоматичним перезапуском і callback
+ * const { seconds, restart, pause } = useCountdown(
+ *   30000, 
+ *   true,
+ *   () => console.log('Countdown completed!')
+ * );
  */
 export function useCountdown(
   duration: number,

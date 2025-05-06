@@ -3,9 +3,33 @@ import { FundData } from '../types/donation';
 import { fetchDonationData } from '../utils/api';
 
 /**
- * Хук для роботи з даними про збір
- * @param jarUrl - URL банки Monobank
- * @returns Об'єкт з даними та методами для керування
+ * Хук для отримання та керування даними про збір коштів у Monobank
+ * 
+ * @param {string} jarUrl - URL банки Monobank для отримання даних про збір
+ * @returns {Object} Об'єкт з даними та методами для керування
+ * @returns {FundData} .data - Дані про збір (заголовок, зібрана сума, ціль, опис)
+ * @returns {boolean} .loading - Прапорець, що вказує на стан завантаження даних
+ * @returns {string|null} .error - Текст помилки, якщо така сталася, або null
+ * @returns {Date|undefined} .lastUpdated - Дата та час останнього успішного оновлення даних
+ * @returns {Function} .triggerUpdate - Функція для ініціювання оновлення даних
+ * 
+ * @example
+ * // Базове використання
+ * const { data, loading, error, lastUpdated, triggerUpdate } = useDonationData(
+ *   'https://send.monobank.ua/jar/123456789'
+ * );
+ * 
+ * // Виведення даних
+ * if (loading) return <div>Завантаження...</div>;
+ * if (error) return <div>Помилка: {error}</div>;
+ * return (
+ *   <div>
+ *     <h2>{data.title}</h2>
+ *     <p>Зібрано: {data.collected}</p>
+ *     <p>Ціль: {data.target}</p>
+ *     <button onClick={triggerUpdate}>Оновити дані</button>
+ *   </div>
+ * );
  */
 export function useDonationData(jarUrl: string) {
   const [data, setData] = useState<FundData>({ 

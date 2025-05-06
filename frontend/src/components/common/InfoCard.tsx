@@ -1,5 +1,12 @@
 import { memo } from 'react';
 
+/**
+ * Інтерфейс для властивостей компонента InfoCard
+ * 
+ * @property {string} title - Заголовок інформаційної картки
+ * @property {string} description - Детальний опис збору коштів
+ * @property {string} jarUrl - URL посилання на банку Monobank
+ */
 interface InfoCardProps {
   title: string;
   description: string;
@@ -8,7 +15,23 @@ interface InfoCardProps {
 
 /**
  * Компонент InfoCard - відображає інформаційну картку зі збором
- * Мемоізований для оптимізації продуктивності
+ * 
+ * Відображає картку з інформацією про збір коштів, включаючи заголовок, опис
+ * та кнопку для переходу на сторінку збору. Мемоізований для оптимізації
+ * продуктивності при перемальовуванні батьківських компонентів.
+ * 
+ * @param {InfoCardProps} props - Властивості компонента
+ * @param {string} props.title - Заголовок інформаційної картки
+ * @param {string} props.description - Детальний опис збору коштів
+ * @param {string} props.jarUrl - URL посилання на банку Monobank
+ * 
+ * @example
+ * // Базовий приклад
+ * <InfoCard
+ *   title="Допомога ЗСУ"
+ *   description="Збір коштів на тепловізор для підрозділу"
+ *   jarUrl="https://send.monobank.ua/jar/123456789"
+ * />
  */
 const InfoCard = memo(function InfoCard({ title, description, jarUrl }: InfoCardProps) {
   return (
