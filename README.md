@@ -30,6 +30,7 @@
 ### Frontend
 - **React 18** з **TypeScript** — для створення інтерактивного UI
 - **Vite** — швидкий і легкий інструмент збірки
+- **Tailwind CSS** — для стилізації компонентів
 - **CSS Variables** — для гнучкої стилізації та темізації
 - **React QR Code** — генерація QR-кодів для швидкого доступу
 - **Custom React Hooks** — для керування темою та станом додатку
@@ -48,19 +49,59 @@
 
 ```
 /monobank-donate
-  /frontend             # React/TypeScript додаток (Vite)
-    /src
-      /components       # UI компоненти
-        DonationCard.tsx  # Компонент картки з QR-кодом
-        StatusInfo.tsx    # Компонент статусу оновлення
-      /hooks            # Кастомні React хуки
-        useTheme.ts       # Хук для керування темою
-      /styles           # CSS стилі
-        App.css           # Основні стилі додатку
-        main.css          # Стандартні стилі та CSS змінні
-  /backend              # Node.js/Express API сервер
-    index.ts            # Головний файл сервера
-    /types              # TypeScript типи
+  ├─ backend/                      # Node.js/Express API сервер
+  │  ├─ types/                     # TypeScript типи
+  │  │  └─ express-xss-sanitizer.d.ts
+  │  ├─ .env                       # Змінні оточення
+  │  ├─ index.ts                   # Головний файл сервера
+  │  ├─ package.json
+  │  └─ tsconfig.json
+  ├─ frontend/                     # React/TypeScript додаток (Vite)
+  │  ├─ public/                    # Статичні файли
+  │  │  └─ mono-icon.svg           # Іконка Monobank
+  │  ├─ src/
+  │  │  ├─ components/             # UI компоненти
+  │  │  │  ├─ common/              # Загальні компоненти
+  │  │  │  │  ├─ InfoCard.tsx      # Інформаційна картка
+  │  │  │  │  └─ ProgressBar.tsx   # Компонент прогрес-бару
+  │  │  │  ├─ donation/            # Компоненти для функціоналу донатів
+  │  │  │  │  ├─ DonationCard.tsx  # Компонент картки з QR-кодом
+  │  │  │  │  └─ StatusInfo.tsx    # Компонент статусу оновлення
+  │  │  │  ├─ layout/              # Компоненти макету
+  │  │  │  │  ├─ AboutSection.tsx  # Секція "Про проект"
+  │  │  │  │  ├─ Footer.tsx        # Підвал сторінки
+  │  │  │  │  └─ Header.tsx        # Заголовок сторінки
+  │  │  │  └─ App.tsx              # Головний компонент додатку
+  │  │  ├─ constants/              # Константи проекту
+  │  │  │  └─ api.ts               # API константи
+  │  │  ├─ hooks/                  # Кастомні React хуки
+  │  │  │  ├─ useCountdown.ts      # Хук для зворотного відліку
+  │  │  │  ├─ useDonationData.ts   # Хук для роботи з даними пожертв
+  │  │  │  └─ useTheme.ts          # Хук для керування темою
+  │  │  ├─ styles/                 # CSS стилі
+  │  │  │  └─ tailwind.css         # Стилі Tailwind CSS
+  │  │  ├─ types/                  # TypeScript типи
+  │  │  │  ├─ donation.ts          # Типи для даних про донати
+  │  │  │  └─ theme.ts             # Типи для теми
+  │  │  ├─ utils/                  # Утиліти
+  │  │  │  ├─ api.ts               # Функції для роботи з API
+  │  │  │  └─ formatters.ts        # Функції форматування
+  │  │  ├─ main.tsx                # Вхідна точка додатку
+  │  │  └─ vite-env.d.ts           # Типи для Vite
+  │  ├─ .env                       # Змінні оточення
+  │  ├─ eslint.config.js           # Конфігурація ESLint
+  │  ├─ index.html                 # Головний HTML файл
+  │  ├─ package.json
+  │  ├─ postcss.config.cjs         # Конфігурація PostCSS
+  │  ├─ tailwind.config.js         # Конфігурація Tailwind CSS
+  │  ├─ tsconfig.app.json          # Конфігурація TypeScript для додатку
+  │  ├─ tsconfig.json              # Базова конфігурація TypeScript
+  │  ├─ tsconfig.node.json         # Конфігурація TypeScript для Node.js
+  │  └─ vite.config.ts             # Конфігурація Vite
+  ├─ .gitattributes
+  ├─ .gitignore
+  ├─ README.md                     # Документація проекту
+  └─ setup.js                      # Скрипт для налаштування проекту
 ```
 
 ## 🚀 Запуск проєкту
