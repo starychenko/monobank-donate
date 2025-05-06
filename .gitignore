@@ -1,0 +1,36 @@
+# Загальні правила
+node_modules/
+package-lock.json
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.history/
+
+# Frontend специфічні
+/frontend/dist/
+/frontend/build/
+/frontend/.cache/
+/frontend/coverage/
+
+# Backend специфічні
+/backend/dist/
+/backend/build/
+/backend/coverage/
+/backend/logs/
+
+# Інше
+.cursor 

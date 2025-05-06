@@ -71,7 +71,7 @@
 
 1. **Клонувати репозиторій**
 ```bash
-git clone https://https://github.com/starychenko/monobank-donate.git
+git clone https://github.com/starychenko/monobank-donate.git
 cd monobank-donate
 ```
 
@@ -79,7 +79,11 @@ cd monobank-donate
 ```bash
 cd backend
 npm install
+
 # Створіть файл .env на основі прикладу
+cp .env.example .env
+# Відредагуйте .env файл зі своїми налаштуваннями
+
 npm run dev
 ```
 
@@ -87,25 +91,58 @@ npm run dev
 ```bash
 cd frontend
 npm install
+
 # Створіть файл .env на основі прикладу
+cp .env.example .env
+# Відредагуйте .env файл зі своїми налаштуваннями
+
 npm run dev
 ```
 
 ## ⚙️ Налаштування (.env)
 
-### Frontend (.env)
+### Frontend (.env.example)
 ```
-VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
-VITE_UPDATE_INTERVAL=15000  # Інтервал оновлення в мс
+# URL API
 VITE_API_URL=http://localhost:3001/api/parse-monobank
+
+# URL збору Monobank
+VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
+
+# Інтервал оновлення в мс (15 секунд)
+VITE_UPDATE_INTERVAL=15000
 ```
 
-### Backend (.env)
+### Backend (.env.example)
 ```
+# Порт сервера
 PORT=3001
+
+# URL банки за замовчуванням
 DEFAULT_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
-CACHE_TTL=15  # Час життя кешу в секундах
+
+# Кешування
+CACHE_TTL=15
+
+# Безпека
+ALLOWED_ORIGINS=http://localhost:5173,https://your-frontend-domain.com
+
+# Режим для розробки
+NODE_ENV=development
 ```
+
+### Інструкції для налаштування
+
+1. У папці `backend`:
+   - Скопіюйте вміст прикладу в новий файл `.env`
+   - Замініть `YOUR_JAR_ID` на фактичний ID банки Monobank
+   - Налаштуйте інші параметри за потреби
+
+2. У папці `frontend`:
+   - Скопіюйте вміст прикладу в новий файл `.env`
+   - Замініть `YOUR_JAR_ID` на фактичний ID банки Monobank
+   - Перевірте URL API бекенду
+   - Налаштуйте інтервал оновлення за потреби
 
 ## 📋 API Документація
 
