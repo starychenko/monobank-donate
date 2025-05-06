@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import QRCode from 'react-qr-code';
 import { ProgressBar } from '../common/ProgressBar';
 
@@ -10,8 +11,14 @@ interface DonationCardProps {
 
 /**
  * Компонент DonationCard - відображає QR-код для пожертвування та статистику збору
+ * Мемоізований для оптимізації продуктивності
  */
-export function DonationCard({ collected, target, jarUrl, progress }: DonationCardProps) {
+const DonationCard = memo(function DonationCard({ 
+  collected, 
+  target, 
+  jarUrl, 
+  progress 
+}: DonationCardProps) {
   return (
     <div className="card donation-card">
       {/* Заголовок */}
@@ -24,7 +31,13 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
       {/* QR-код і дані */}
       <div className="donation-card-content">
         {/* QR-код */}
-        <div className="donation-card-qr">
+        <div 
+          className="donation-card-qr"
+          style={{ 
+            transition: 'transform 0.3s ease',
+            transform: jarUrl ? 'scale(1)' : 'scale(0.97)',
+          }}
+        >
           {jarUrl ? (
             <QRCode 
               value={jarUrl} 
@@ -42,11 +55,20 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
 
         {/* Суми в картках */}
         <div className="donation-card-stats">
-          <div className="donation-card-stat">
+          <div 
+            className="donation-card-stat"
+            style={{ 
+              transition: 'all 0.3s ease',
+              animation: collected ? 'pulse 0.5s ease' : 'none'
+            }}
+          >
             <span className="donation-card-stat-label">
               Накопичено
             </span>
-            <span className="donation-card-stat-value">
+            <span 
+              className="donation-card-stat-value"
+              style={{ transition: 'color 0.3s ease' }}
+            >
               {collected || '—'}
             </span>
           </div>
@@ -65,4 +87,19 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
       </div>
     </div>
   );
-} 
+});
+
+// Визначаємо стилі анімації
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+export { DonationCard }; 
