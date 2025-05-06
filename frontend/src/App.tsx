@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { DonationCard } from './components/DonationCard'
 import { StatusInfo } from './components/StatusInfo'
 import { useTheme } from './hooks/useTheme'
-import './styles/App.css'
 
 // Додаємо значення за замовчуванням для всіх змінних з .env
 const JAR_URL = import.meta.env.VITE_MONOBANK_JAR_URL || 'https://send.monobank.ua/jar/58vdbegH3T'
@@ -18,7 +17,7 @@ interface FundData {
 
 function App() {
   // Використовуємо хук useTheme для встановлення темної теми
-  useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [data, setData] = useState<FundData>({ 
     title: '', 
     collected: '', 
@@ -119,6 +118,23 @@ function App() {
             <span className="app-title-bank">bank</span>
             <span className="app-title-donate">Donate</span>
           </h1>
+          
+          {/* Кнопка перемикання теми */}
+          <button 
+            className="theme-toggle-button"
+            onClick={toggleTheme}
+            aria-label="Перемкнути тему"
+          >
+            {theme === 'dark' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
         </div>
       </header>
       
@@ -147,11 +163,11 @@ function App() {
               />
 
               {/* Інформація про збір */}
-              <div className="card app-info-card" style={{ marginLeft: '-5px', padding: '1.25rem' }}>
-                <h3 className="app-info-title" style={{ fontSize: 'var(--font-size-xl)', marginBottom: '0.75rem' }}>
+              <div className="card app-info-card">
+                <h3 className="app-info-title">
                   Збір для 41 ОМБ
                 </h3>
-                <p className="app-info-text" style={{ fontSize: 'var(--font-size-base)', lineHeight: '1.5', marginBottom: '1.25rem' }}>
+                <p className="app-info-text">
                   {data.description}
                 </p>
                 
@@ -161,7 +177,6 @@ function App() {
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="gradient-button"
-                    style={{ padding: '0.75rem 1.5rem', fontSize: 'var(--font-size-base)' }}
                   >
                     Долучитись до збору
                     <svg 
@@ -169,7 +184,6 @@ function App() {
                       className="button-icon" 
                       viewBox="0 0 20 20" 
                       fill="currentColor"
-                      style={{ width: '1.25rem', height: '1.25rem', marginLeft: '0.5rem' }}
                     >
                       <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                       <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />

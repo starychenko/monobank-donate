@@ -27,7 +27,7 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
               size={180}
               bgColor="white"
               fgColor="#000000"
-              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              className="h-auto max-w-full w-full"
             />
           ) : (
             <div className="donation-card-qr-placeholder">
@@ -60,7 +60,7 @@ export function DonationCard({ collected, target, jarUrl, progress }: DonationCa
         <div className="donation-card-progress">
           <div className="donation-card-progress-bar">
             <div
-              className="animated-gradient donation-card-progress-value"
+              className="donation-card-progress-value"
               style={{ width: `${progress}%` }}
             ></div>
           </div>

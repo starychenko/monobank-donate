@@ -2,30 +2,164 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html, body {
+    @apply h-full w-full min-h-screen m-0 p-0 overflow-x-hidden;
+  }
+
+  html {
+    @apply relative antialiased text-base;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark {
+    @apply bg-bg-dark;
+  }
+
+  html.light {
+    @apply bg-gray-100;
+  }
+
+  body {
+    @apply font-ui text-base leading-normal font-normal flex flex-col antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'liga', 'calt';
+  }
+
+  .dark body {
+    @apply text-text-light bg-bg-dark;
+  }
+
+  .light body {
+    @apply text-black bg-white;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold leading-tight tracking-tight mb-2;
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-text-light;
+  }
+
+  .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+    @apply text-black;
+  }
+
+  h1 {
+    @apply text-4xl font-extrabold;
+  }
+
+  h2 {
+    @apply text-3xl font-bold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl font-semibold;
+  }
+
+  p {
+    @apply mb-4 max-w-[65ch];
+  }
+
+  #root {
+    @apply min-h-screen flex flex-col;
+  }
+
+  button {
+    @apply font-ui font-medium cursor-pointer;
+    all: unset;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  code, pre, .monospace {
+    @apply font-mono text-[0.9em];
+  }
+  
+  /* Додаємо стилі для переходів */
+  p, span, div {
+    @apply transition-colors duration-theme ease-theme;
+  }
+  
+  svg {
+    @apply transition-[filter] duration-theme ease-theme;
+  }
+}
+
 /* Компонентні класи з використанням @apply */
 @layer components {
   .card {
-    @apply bg-[#222222] rounded-card overflow-hidden shadow-card border border-white/[0.06] text-text-light transition-transform duration-300 ease-in-out hover:translate-y-[-5px] hover:shadow-lg;
+    @apply rounded-card overflow-hidden border transition-transform duration-300 ease-in-out hover:translate-y-[-5px];
+  }
+  
+  .dark .card {
+    @apply bg-[#222222] shadow-card border-white-6 text-text-light hover:shadow-lg;
+  }
+  
+  .light .card {
+    @apply bg-white shadow-md border-gray-100 text-black hover:shadow-xl;
   }
   
   .gradient-button {
-    @apply bg-gradient-primary text-black py-3 px-6 rounded-lg font-semibold inline-flex items-center transition-all duration-300 hover:bg-gradient-dark hover:translate-y-[-2px];
+    @apply text-black py-3 px-6 rounded-lg font-semibold inline-flex items-center transition-all duration-300 hover:translate-y-[-2px] text-sm tracking-wider;
+  }
+  
+  .dark .gradient-button {
+    @apply bg-gradient-primary hover:bg-gradient-dark;
+  }
+  
+  .light .gradient-button {
+    @apply bg-primary hover:bg-dark-primary;
   }
   
   .app-container {
-    @apply flex flex-col min-h-screen h-full transition-colors;
+    @apply flex flex-col min-h-screen h-full transition-colors duration-theme ease-theme;
   }
   
   .app-header {
-    @apply py-3 flex justify-between items-center mb-2 w-full z-10 bg-[#1c1c1e]/95 border-b border-white/10;
+    @apply py-3 flex justify-between items-center mb-2 w-full z-10 border-b transition-colors duration-theme ease-theme;
+  }
+  
+  .dark .app-header {
+    @apply bg-dark-bg border-white-10;
+  }
+  
+  .light .app-header {
+    @apply bg-white border-gray-100;
   }
   
   .header-container {
-    @apply flex justify-start w-full;
+    @apply flex justify-between items-center w-full;
+  }
+  
+  .theme-toggle-button {
+    @apply p-2 rounded-full cursor-pointer transition-all duration-300 ml-4;
+  }
+  
+  .dark .theme-toggle-button {
+    @apply hover:bg-white-10;
+  }
+  
+  .light .theme-toggle-button {
+    @apply hover:bg-gray-100;
   }
   
   .container {
-    @apply w-full max-w-7xl mx-auto px-6;
+    @apply w-full max-w-container mx-auto px-6;
   }
   
   .app-title {
@@ -33,7 +167,15 @@
   }
   
   .app-title-mono {
-    @apply font-bold text-text-light;
+    @apply font-bold;
+  }
+  
+  .dark .app-title-mono {
+    @apply text-text-light;
+  }
+  
+  .light .app-title-mono {
+    @apply text-black;
   }
   
   .app-title-bank {
@@ -41,7 +183,15 @@
   }
   
   .app-title-donate {
-    @apply ml-2 text-white/70 font-normal;
+    @apply ml-2 font-normal;
+  }
+  
+  .dark .app-title-donate {
+    @apply text-white-70;
+  }
+  
+  .light .app-title-donate {
+    @apply text-gray-600;
   }
   
   .app-content {
@@ -49,12 +199,11 @@
   }
   
   .app-main {
-    @apply flex flex-col items-center justify-center flex-1 min-h-[60vh] py-0 pb-2;
+    @apply flex flex-col items-center justify-center flex-1 min-h-main py-0 pb-2;
   }
   
   .app-grid {
-    @apply w-full grid gap-0 mb-4 max-w-[1200px];
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    @apply w-full grid gap-0 mb-4 max-w-container grid-cols-auto-fit;
   }
   
   .app-card-container {
@@ -74,20 +223,144 @@
   }
   
   .app-info-text {
-    @apply mb-5 leading-relaxed text-white/80 font-ui text-base;
+    @apply mb-5 leading-relaxed font-ui text-base;
+  }
+  
+  .dark .app-info-text {
+    @apply text-white-80;
+  }
+  
+  .light .app-info-text {
+    @apply text-gray-600;
+  }
+  
+  .app-about-wrapper {
+    @apply w-full mt-2 py-5 border-t transition-colors duration-theme ease-theme;
+  }
+  
+  .dark .app-about-wrapper {
+    @apply bg-dark-section border-white-3;
+  }
+  
+  .light .app-about-wrapper {
+    @apply bg-gray-50 border-gray-100;
+  }
+
+  .app-about-section {
+    @apply w-full flex justify-center;
+  }
+
+  .app-about-card {
+    @apply max-w-about-card w-full p-5 border;
+  }
+  
+  .dark .app-about-card {
+    @apply bg-white-3 border-white-5;
+  }
+  
+  .light .app-about-card {
+    @apply bg-white border-gray-100;
+  }
+
+  .app-about-title {
+    @apply text-lg font-semibold mb-3 font-heading text-mono-yellow;
+  }
+
+  .app-about-text {
+    @apply mb-0 leading-relaxed font-ui text-sm;
+  }
+  
+  .dark .app-about-text {
+    @apply text-white-70;
+  }
+  
+  .light .app-about-text {
+    @apply text-gray-600;
+  }
+
+  .button-icon {
+    @apply w-4 h-4 ml-2;
   }
   
   .app-footer {
-    @apply w-full text-center py-4 text-white/70 border-t border-white/10 bg-[#1c1c1e]/95 transition-colors;
+    @apply w-full text-center py-4 border-t transition-colors duration-theme ease-theme;
+  }
+  
+  .dark .app-footer {
+    @apply text-white-70 border-white-10 bg-dark-bg;
+  }
+  
+  .light .app-footer {
+    @apply text-gray-600 border-gray-100 bg-white;
   }
   
   .app-footer-content {
     @apply flex items-center justify-center gap-3 font-ui font-medium text-sm;
   }
   
+  .app-footer-brand {
+    @apply flex items-center;
+  }
+
+  .app-footer-year {
+    @apply mr-[0.35rem];
+  }
+
+  .app-footer-mono {
+    @apply font-bold;
+  }
+  
+  .dark .app-footer-mono {
+    @apply text-text-light;
+  }
+  
+  .light .app-footer-mono {
+    @apply text-black;
+  }
+
+  .app-footer-bank {
+    @apply font-bold text-mono-yellow;
+  }
+
+  .app-footer-donate {
+    @apply ml-2 font-normal;
+  }
+  
+  .dark .app-footer-donate {
+    @apply text-white-70;
+  }
+  
+  .light .app-footer-donate {
+    @apply text-gray-600;
+  }
+
+  .app-footer-separator {
+    @apply text-white-50;
+  }
+  
+  .dark .app-footer-separator {
+    @apply text-white-50;
+  }
+  
+  .light .app-footer-separator {
+    @apply text-gray-400;
+  }
+
+  .app-footer-credits {
+    @apply text-white-70;
+  }
+  
+  .dark .app-footer-credits {
+    @apply text-white-70;
+  }
+  
+  .light .app-footer-credits {
+    @apply text-gray-600;
+  }
+  
   /* StatusInfo компонент */
   .status-info-card {
-    @apply p-6 text-center min-h-[7.5rem] flex flex-col justify-center -ml-[5px];
+    @apply p-6 text-center min-h-status flex flex-col justify-center -ml-[5px];
   }
   
   .status-info-container {
@@ -95,15 +368,39 @@
   }
   
   .status-info-status {
-    @apply flex items-center gap-3 text-white/90 font-ui text-lg font-medium;
+    @apply flex items-center gap-3 font-ui text-lg font-medium;
+  }
+  
+  .dark .status-info-status {
+    @apply text-white-90;
+  }
+  
+  .light .status-info-status {
+    @apply text-gray-800;
   }
   
   .status-info-loading {
-    @apply w-6 h-6 rounded-full border-[3px] border-black/10 border-t-primary;
+    @apply w-6 h-6 rounded-full border-[3px] border-t-primary spinner;
+  }
+  
+  .dark .status-info-loading {
+    @apply border-black-10;
+  }
+  
+  .light .status-info-loading {
+    @apply border-gray-200;
   }
   
   .status-info-time {
-    @apply text-sm text-white/60 flex gap-2 items-center font-ui font-normal;
+    @apply text-sm flex gap-2 items-center font-ui font-normal;
+  }
+  
+  .dark .status-info-time {
+    @apply text-white-60;
+  }
+  
+  .light .status-info-time {
+    @apply text-gray-500;
   }
   
   /* DonationCard компонент */
@@ -116,7 +413,7 @@
   }
   
   .donation-card-title {
-    @apply text-[22px] font-bold m-0 tracking-wide text-black;
+    @apply text-card-title font-bold m-0 tracking-card text-black;
   }
   
   .donation-card-content {
@@ -124,7 +421,7 @@
   }
   
   .donation-card-qr {
-    @apply p-4 bg-white rounded-lg shadow-lg;
+    @apply p-4 bg-white rounded-lg shadow-qr;
   }
   
   .donation-card-qr-placeholder {
@@ -140,11 +437,27 @@
   }
   
   .donation-card-stat {
-    @apply flex-1 bg-white/5 rounded-xl p-4 py-3 flex flex-col items-center;
+    @apply flex-1 rounded-xl p-4 py-3 flex flex-col items-center;
+  }
+  
+  .dark .donation-card-stat {
+    @apply bg-white-5;
+  }
+  
+  .light .donation-card-stat {
+    @apply bg-gray-50;
   }
   
   .donation-card-stat-label {
-    @apply text-sm text-white/50 mb-1 font-ui font-medium;
+    @apply text-sm mb-1 font-ui font-medium;
+  }
+  
+  .dark .donation-card-stat-label {
+    @apply text-white-50;
+  }
+  
+  .light .donation-card-stat-label {
+    @apply text-gray-500;
   }
   
   .donation-card-stat-value {
@@ -156,11 +469,19 @@
   }
   
   .donation-card-progress-bar {
-    @apply w-full h-[0.6rem] bg-white/10 rounded-full overflow-hidden;
+    @apply w-full h-[0.6rem] rounded-full overflow-hidden;
+  }
+  
+  .dark .donation-card-progress-bar {
+    @apply bg-white-10;
+  }
+  
+  .light .donation-card-progress-bar {
+    @apply bg-gray-100;
   }
   
   .donation-card-progress-value {
-    @apply h-full bg-gradient-primary transition-all duration-1000;
+    @apply h-full bg-gradient-primary transition-all duration-1000 animated-gradient;
   }
   
   .donation-card-progress-text {
@@ -168,11 +489,93 @@
   }
   
   .donation-card-progress-label {
-    @apply text-sm text-white/50 font-ui;
+    @apply text-sm font-ui;
+  }
+  
+  .dark .donation-card-progress-label {
+    @apply text-white-50;
+  }
+  
+  .light .donation-card-progress-label {
+    @apply text-gray-500;
   }
   
   .donation-card-progress-percent {
     @apply text-sm font-medium text-primary font-ui;
+  }
+}
+
+/* Media queries */
+@layer utilities {
+  @media screen and (max-width: 768px) {
+    .app-grid {
+      @apply grid-cols-1 gap-4 px-2;
+    }
+    
+    .app-main {
+      @apply pt-2;
+    }
+    
+    .app-header {
+      @apply py-2;
+    }
+    
+    .app-title {
+      @apply text-2xl;
+    }
+  }
+  
+  @media screen and (min-width: 769px) and (max-width: 1200px) {
+    .app-grid {
+      @apply gap-4 px-4;
+    }
+  }
+  
+  @media screen and (min-width: 1201px) {
+    .app-grid {
+      @apply gap-6;
+    }
+  }
+  
+  @media screen and (min-width: 769px) {
+    .app-grid {
+      @apply grid-cols-2;
+    }
+    
+    .app-card-container, 
+    .app-info-container {
+      @apply p-4;
+    }
+  }
+  
+  @media screen and (min-width: 2000px) {
+    .app-container {
+      @apply text-lg;
+    }
+    
+    .app-content {
+      @apply max-w-[1800px] mx-auto;
+    }
+    
+    .app-grid {
+      @apply gap-8 max-w-[1600px];
+    }
+    
+    .app-header {
+      @apply py-4;
+    }
+    
+    .app-title {
+      @apply text-4xl;
+    }
+    
+    .app-about-wrapper {
+      @apply py-6;
+    }
+    
+    .app-footer {
+      @apply py-5;
+    }
   }
 }
 
@@ -195,4 +598,33 @@
 .animated-gradient {
   animation: progressAnimation 3s ease infinite;
   background-size: 200% auto;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply rounded-full;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-black-10;
+}
+
+.light ::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-primary/70 hover:bg-primary;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  @apply bg-primary/80 hover:bg-primary;
 } 

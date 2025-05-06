@@ -42,15 +42,15 @@ export function StatusInfo({ loading, error, updateInterval, lastUpdated, onCoun
         <div className="status-info-status">
           {loading ? (
             <>
-              <div className="spinner status-info-loading"></div>
+              <div className="status-info-loading"></div>
               <span>Оновлення даних...</span>
             </>
           ) : error ? (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#e53e3e]" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-error" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              <span className="text-[#e53e3e] font-medium">{error}</span>
+              <span className="text-error font-medium">{error}</span>
             </>
           ) : (
             <>
