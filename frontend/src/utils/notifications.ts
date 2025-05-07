@@ -7,6 +7,11 @@ interface ExtendedNotificationOptions extends NotificationOptions {
   vibrate?: number[];
 }
 
+// Порогові значення для сповіщень (з .env або значення за замовчуванням)
+const NOTIFICATION_THRESHOLD_TARGET_PERCENT = Number(import.meta.env.VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT || 2);
+const NOTIFICATION_THRESHOLD_CURRENT_PERCENT = Number(import.meta.env.VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT || 5);
+const NOTIFICATION_THRESHOLD_ABSOLUTE = Number(import.meta.env.VITE_NOTIFICATION_THRESHOLD_ABSOLUTE || 1000);
+
 /**
  * Перевіряє, чи підтримуються сповіщення в поточному браузері
  */
@@ -112,7 +117,10 @@ export const notifyDonationChange = async (
     // Визначаємо, чи є зміни значними
     const percentOfTarget = (difference / targetAmount) * 100;
     const percentOfCurrent = (difference / previousAmount) * 100;
-    const isSignificant = percentOfTarget >= 2 || percentOfCurrent >= 5 || difference >= 1000;
+    const isSignificant = 
+      percentOfTarget >= NOTIFICATION_THRESHOLD_TARGET_PERCENT || 
+      percentOfCurrent >= NOTIFICATION_THRESHOLD_CURRENT_PERCENT || 
+      difference >= NOTIFICATION_THRESHOLD_ABSOLUTE;
 
     if (!isSignificant) return false;
 

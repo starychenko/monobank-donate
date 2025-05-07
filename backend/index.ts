@@ -18,6 +18,25 @@ const DEFAULT_JAR_URL = process.env.DEFAULT_JAR_URL || '';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
+// Налаштування обмежень для rate limit
+const RATE_LIMIT_GLOBAL_MAX = Number(process.env.RATE_LIMIT_GLOBAL_MAX) || (IS_PRODUCTION ? 300 : 1000);
+const RATE_LIMIT_PARSE_MAX = Number(process.env.RATE_LIMIT_PARSE_MAX) || (IS_PRODUCTION ? 30 : 100);
+const RATE_LIMIT_BRUTEFORCE_MAX = Number(process.env.RATE_LIMIT_BRUTEFORCE_MAX) || (IS_PRODUCTION ? 20 : 50);
+const REQUEST_SIZE_LIMIT = process.env.REQUEST_SIZE_LIMIT || '10kb';
+
+// Налаштування для puppeteer
+const PUPPETEER_NAVIGATION_TIMEOUT = Number(process.env.PUPPETEER_NAVIGATION_TIMEOUT) || 30000;
+const PUPPETEER_WAIT_TIMEOUT = Number(process.env.PUPPETEER_WAIT_TIMEOUT) || 15000;
+const PUPPETEER_STATS_TIMEOUT = Number(process.env.PUPPETEER_STATS_TIMEOUT) || 10000;
+
+// Налаштування для механізму повторних спроб
+const MAX_RETRIES = Number(process.env.MAX_RETRIES) || 3;
+const RETRY_INITIAL_DELAY = Number(process.env.RETRY_INITIAL_DELAY) || 1000;
+
+// Налаштування для скріншотів
+const SCREENSHOTS_ENABLED = process.env.SCREENSHOTS_ENABLED === 'true' || NODE_ENV === 'development';
+const SCREENSHOTS_PATH = process.env.SCREENSHOTS_PATH || 'monobank-error.png';
+
 // Безпека: Встановлюємо заголовки безпеки за допомогою Helmet
 app.use(helmet());
 
@@ -31,7 +50,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Безпека: обмеження розміру даних
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: REQUEST_SIZE_LIMIT }));
 
 // Безпека: чистка даних від XSS
 app.use(xss());
@@ -54,10 +73,10 @@ const logRateLimitExceeded = (req: Request, res: Response, next: NextFunction): 
 // 1. Базовий лімітер для всіх API запитів
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 хвилин
-  max: IS_PRODUCTION ? 300 : 1000, // Більш жорсткий в production
+  max: RATE_LIMIT_GLOBAL_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  message: createLimitMessage('API', 15, IS_PRODUCTION ? 300 : 1000),
+  message: createLimitMessage('API', 15, RATE_LIMIT_GLOBAL_MAX),
   skip: (req, res) => !IS_PRODUCTION && req.ip === '127.0.0.1', // В розробці пропускаємо локальні запити
   keyGenerator: (req) => {
     // Використовуємо або X-Forwarded-For, або IP
@@ -68,10 +87,10 @@ const globalLimiter = rateLimit({
 // 2. Суворіший лімітер для конкретного ендпоінту з парсингом
 const parseMonobankLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 хвилин
-  max: IS_PRODUCTION ? 30 : 100, // Максимум 30 запитів за 5 хвилин в production
+  max: RATE_LIMIT_PARSE_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  message: createLimitMessage('parse-monobank', 5, IS_PRODUCTION ? 30 : 100),
+  message: createLimitMessage('parse-monobank', 5, RATE_LIMIT_PARSE_MAX),
   skipSuccessfulRequests: false, // Лічимо всі запити, не лише успішні
   skipFailedRequests: false, // Лічимо навіть невдалі запити  
   // Зберігаємо IP в нормалізованому вигляді для запобігання обходу
@@ -94,7 +113,7 @@ const parseMonobankLimiter = rateLimit({
 // 3. Екстремальний лімітер для захисту від потенційних атак
 const bruteForceProtectionLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 хвилина
-  max: IS_PRODUCTION ? 20 : 50, // Максимум 20 запитів за 1 хвилину в production
+  max: RATE_LIMIT_BRUTEFORCE_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Підозріла активність. Ваш доступ тимчасово обмежено.',
@@ -178,7 +197,7 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
     const page = await browser.newPage();
     
     // Встановлюємо таймаут для запиту
-    await page.setDefaultNavigationTimeout(30000);
+    await page.setDefaultNavigationTimeout(PUPPETEER_NAVIGATION_TIMEOUT);
     
     // Блокуємо зайві ресурси для пришвидшення
     await page.setRequestInterception(true);
@@ -194,8 +213,8 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
     // Функція для повторних спроб з експоненційним очікуванням
     const retry = async <T>(
       fn: () => Promise<T>, 
-      maxRetries: number = 3, 
-      retryDelay: number = 1000
+      maxRetries: number = MAX_RETRIES, 
+      retryDelay: number = RETRY_INITIAL_DELAY
     ): Promise<T> => {
       let lastError: Error | null = null;
       
@@ -233,7 +252,7 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
       // Використовуємо функцію повторних спроб при переході на сторінку
       await retry(() => page.goto(jarUrl, { 
         waitUntil: 'networkidle2',
-        timeout: 45000 // Збільшуємо таймаут до 45 секунд
+        timeout: PUPPETEER_WAIT_TIMEOUT // Збільшуємо таймаут до 45 секунд
       }));
       
       // Перевіряємо, чи є перенаправлення на іншу сторінку
@@ -246,18 +265,18 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
       try {
         // Спочатку чекаємо заголовок (h1) - це основна ознака, що сторінка завантажилась
         await retry(() => page.waitForSelector('header .field.name h1', { 
-          timeout: 15000
+          timeout: PUPPETEER_WAIT_TIMEOUT
         }));
         
         // Додатково чекаємо, щоб завантажились дані статистики
         await retry(() => page.waitForSelector('.jar-stats .stats-data-value', { 
-          timeout: 10000
+          timeout: PUPPETEER_STATS_TIMEOUT
         }));
       } catch (waitError) {
         // Виконуємо скріншот для діагностики при проблемах
-        if (process.env.NODE_ENV === 'development') {
-          await page.screenshot({ path: 'monobank-error.png' });
-          console.error('Screenshot saved to monobank-error.png');
+        if (SCREENSHOTS_ENABLED) {
+          await page.screenshot({ path: SCREENSHOTS_PATH });
+          console.error(`Screenshot saved to ${SCREENSHOTS_PATH}`);
         }
         
         // Перевіряємо вміст сторінки для кращої діагностики

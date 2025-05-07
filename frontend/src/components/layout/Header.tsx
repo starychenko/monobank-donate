@@ -2,6 +2,9 @@ import { Theme } from '../../types/theme';
 import { useEffect, useState } from 'react';
 import { getNotificationPermission, isNotificationsSupported, requestNotificationPermission } from '../../utils/notifications';
 
+// Інтервал перевірки дозволу сповіщень у мілісекундах
+const PERMISSION_CHECK_INTERVAL = Number(import.meta.env.VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL || 2000);
+
 interface HeaderProps {
   theme: Theme;
   onToggleTheme: () => void;
@@ -24,7 +27,7 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
       };
       
       // Для Safari/Chrome можемо перевіряти періодично
-      const checkPermissionInterval = setInterval(handlePermissionChange, 2000);
+      const checkPermissionInterval = setInterval(handlePermissionChange, PERMISSION_CHECK_INTERVAL);
       
       return () => {
         clearInterval(checkPermissionInterval);
