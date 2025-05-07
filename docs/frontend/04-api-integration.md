@@ -25,7 +25,7 @@ src/
 ```typescript
 // src/constants/api.ts
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+export const API_BASE_URL = 'http://localhost:3001';
 
 export const API_PATHS = {
   PARSE_MONOBANK: '/api/parse-monobank',
@@ -39,6 +39,8 @@ export const UPDATE_INTERVAL = 15 * 60 * 1000; // 15 хвилин
 // Мінімальна різниця сум для показу сповіщення (у гривнях)
 export const NOTIFICATION_THRESHOLD = 500;
 ```
+
+> **Примітка:** URL API сервера тепер жорстко закодований у коді як `http://localhost:3001/api/parse-monobank` і не налаштовується через змінні оточення.
 
 ## Утиліти для API
 

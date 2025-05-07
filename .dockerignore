@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+*.env
+dist
+build
+coverage
+.DS_Store
+*.png
+*.jpg
+*.jpeg
+Dockerfile*
+docker-compose*
+README.md
+LICENSE 

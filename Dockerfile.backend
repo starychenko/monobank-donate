@@ -1,0 +1,40 @@
+FROM node:18-alpine
+
+# Встановлюємо необхідні залежності для Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Налаштування змінних середовища для Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+WORKDIR /app
+
+# Копіюємо файли залежностей
+COPY backend/package*.json ./
+
+# Встановлюємо залежності
+RUN npm ci
+
+# Копіюємо решту файлів проекту
+COPY backend/ ./
+
+# Створюємо .env файл, якщо його немає
+RUN touch .env
+
+# Додаємо налаштування CORS
+ENV ALLOWED_ORIGINS=http://localhost,http://frontend,http://localhost:5173,http://frontend:80
+
+# Будуємо проект
+RUN npm run build
+
+EXPOSE 3001
+
+# Запускаємо сервер
+CMD ["node", "dist/index.js"] 

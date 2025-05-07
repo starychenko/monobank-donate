@@ -1,0 +1,32 @@
+FROM node:18-alpine as build
+
+WORKDIR /app
+
+# Копіюємо залежності
+COPY frontend/package.json frontend/package-lock.json ./
+
+# Встановлюємо залежності
+RUN npm ci
+
+# Копіюємо інші файли проекту
+COPY frontend/ ./
+
+# Встановлюємо аргумент для API_URL
+ARG VITE_API_URL=http://backend:3001/api/parse-monobank
+ENV VITE_API_URL=${VITE_API_URL}
+
+# Будуємо додаток
+RUN npm run build
+
+# Використовуємо nginx для роздачі статичних файлів
+FROM nginx:alpine
+
+# Копіюємо конфігурацію nginx
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Копіюємо зібрані статичні файли з етапу build
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"] 

@@ -96,10 +96,7 @@ function createEnvFile(dir) {
  */
 function createFrontendEnvExample() {
   const filePath = path.join(frontendDir, '.env.example');
-  const content = `# URL API
-VITE_API_URL=http://localhost:3001/api/parse-monobank
-
-# URL збору Monobank
+  const content = `# URL збору Monobank
 VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
 
 # Інтервал оновлення в мс (15 секунд)
@@ -130,10 +127,7 @@ VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000`;
  */
 function createBackendEnvExample() {
   const filePath = path.join(backendDir, '.env.example');
-  const content = `# Порт сервера
-PORT=3001
-
-# URL банки за замовчуванням
+  const content = `# URL банки за замовчуванням
 DEFAULT_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
 
 # Кешування
@@ -240,7 +234,6 @@ async function configureEnvFiles() {
   updateEnvValue(frontendEnvPath, 'VITE_MONOBANK_JAR_URL', `https://send.monobank.ua/jar/${jarId}`);
   
   // Налаштування параметрів бекенду
-  await askAndSetValue('Порт сервера', '3001', backendEnvPath, 'PORT');
   await askAndSetValue('Час життя кешу в секундах', '15', backendEnvPath, 'CACHE_TTL');
   
   // Налаштування параметрів rate limit для бекенду
@@ -285,13 +278,6 @@ async function configureEnvFiles() {
   }
   
   // Налаштування фронтенду
-  const backendPort = fs.readFileSync(backendEnvPath, 'utf8')
-    .split('\n')
-    .find(line => line.startsWith('PORT='))
-    ?.split('=')[1] || '3001';
-    
-  const defaultApiUrl = `http://localhost:${backendPort}/api/parse-monobank`;
-  await askAndSetValue('URL API бекенду', defaultApiUrl, frontendEnvPath, 'VITE_API_URL');
   await askAndSetValue('Інтервал оновлення в мс', '15000', frontendEnvPath, 'VITE_UPDATE_INTERVAL');
   
   // Налаштування сповіщень

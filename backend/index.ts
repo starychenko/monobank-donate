@@ -13,7 +13,7 @@ import http from 'http';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 const DEFAULT_JAR_URL = process.env.DEFAULT_JAR_URL || '';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
@@ -42,9 +42,10 @@ app.use(helmet());
 
 // Налаштування CORS
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:80', 'http://localhost:5173', 'http://frontend:80', 'http://frontend:5173'],
   methods: ['POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
+  credentials: true
 };
 
 app.use(cors(corsOptions));

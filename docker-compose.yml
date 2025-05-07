@@ -1,0 +1,31 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - VITE_API_URL=http://localhost:3001/api/parse-monobank
+    container_name: monobank-donate-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - monobank-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: monobank-donate-backend
+    environment:
+      - NODE_ENV=production
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://frontend:80
+    ports:
+      - "3001:3001"
+    networks:
+      - monobank-network
+
+networks:
+  monobank-network:
+    driver: bridge 

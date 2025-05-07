@@ -62,9 +62,6 @@ backend/
 Проект використовує наступні змінні оточення:
 
 ```
-# Порт сервера
-PORT=3001
-
 # URL банки за замовчуванням
 DEFAULT_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
 
@@ -77,6 +74,8 @@ ALLOWED_ORIGINS=http://localhost:5173,https://your-frontend-domain.com
 # Режим розробки
 NODE_ENV=development
 ```
+
+> **Примітка:** Порт API сервера (3001) жорстко закодований у коді і не налаштовується через змінні оточення.
 
 ### Встановлення та запуск
 
@@ -641,8 +640,7 @@ describe('retry function', () => {
       "watch": false,
       "max_memory_restart": "300M",
       "env": {
-        "NODE_ENV": "production",
-        "PORT": 3001
+        "NODE_ENV": "production"
       }
     }
   ]
