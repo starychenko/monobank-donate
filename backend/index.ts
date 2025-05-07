@@ -7,6 +7,8 @@ import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import helmet from 'helmet';
 import { xss } from 'express-xss-sanitizer';
+import https from 'https';
+import http from 'http';
 
 dotenv.config();
 
@@ -153,6 +155,12 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
   const jarUrl = url || DEFAULT_JAR_URL;
   
   try {
+    // Перевіряємо доступність URL перед запуском Puppeteer
+    const isUrlAccessible = await checkUrlAvailability(jarUrl);
+    if (!isUrlAccessible) {
+      throw new Error(`Monobank URL is not accessible: ${jarUrl}`);
+    }
+    
     // Додаємо додаткові параметри безпеки для Puppeteer
     const browser = await puppeteer.launch({ 
       args: [
@@ -183,27 +191,179 @@ const parseMonobankHandler: RequestHandler = async (req, res) => {
       }
     });
     
+    // Функція для повторних спроб з експоненційним очікуванням
+    const retry = async <T>(
+      fn: () => Promise<T>, 
+      maxRetries: number = 3, 
+      retryDelay: number = 1000
+    ): Promise<T> => {
+      let lastError: Error | null = null;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          return await fn();
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          
+          // Перевіряємо, чи є це мережевою помилкою, яку варто повторити
+          const errorMessage = lastError.message.toLowerCase();
+          const isNetworkError = 
+            errorMessage.includes('net::err_socket') || 
+            errorMessage.includes('net::err_connection') ||
+            errorMessage.includes('net::err_timed_out') ||
+            errorMessage.includes('navigation timeout');
+          
+          // Якщо це не мережева помилка або остання спроба, припиняємо спроби
+          if (!isNetworkError || attempt === maxRetries) {
+            throw lastError;
+          }
+          
+          // Експоненційне очікування між спробами (1с, 2с, 4с...)
+          const delay = retryDelay * Math.pow(2, attempt - 1);
+          console.warn(`Network error encountered, retrying (${attempt}/${maxRetries}) after ${delay}ms: ${lastError.message}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+      
+      // Цей код не повинен виконатись, але TypeScript вимагає повернення
+      throw lastError;
+    };
+    
     try {
-      await page.goto(jarUrl, { waitUntil: 'networkidle2' });
-      await page.waitForSelector('header .field.name h1', { timeout: 10000 });
+      // Використовуємо функцію повторних спроб при переході на сторінку
+      await retry(() => page.goto(jarUrl, { 
+        waitUntil: 'networkidle2',
+        timeout: 45000 // Збільшуємо таймаут до 45 секунд
+      }));
+      
+      // Перевіряємо, чи є перенаправлення на іншу сторінку
+      const currentUrl = page.url();
+      if (currentUrl !== jarUrl && !currentUrl.includes('send.monobank.ua/jar/')) {
+        throw new Error(`Redirected to unexpected URL: ${currentUrl}`);
+      }
+      
+      // Більш надійне очікування завантаження структури сторінки
+      try {
+        // Спочатку чекаємо заголовок (h1) - це основна ознака, що сторінка завантажилась
+        await retry(() => page.waitForSelector('header .field.name h1', { 
+          timeout: 15000
+        }));
+        
+        // Додатково чекаємо, щоб завантажились дані статистики
+        await retry(() => page.waitForSelector('.jar-stats .stats-data-value', { 
+          timeout: 10000
+        }));
+      } catch (waitError) {
+        // Виконуємо скріншот для діагностики при проблемах
+        if (process.env.NODE_ENV === 'development') {
+          await page.screenshot({ path: 'monobank-error.png' });
+          console.error('Screenshot saved to monobank-error.png');
+        }
+        
+        // Перевіряємо вміст сторінки для кращої діагностики
+        const pageContent = await page.content();
+        const bodyTextContent = await page.$eval('body', el => el.textContent || '');
+        
+        if (!bodyTextContent.trim()) {
+          throw new Error('Monobank returned empty page');
+        }
+        
+        if (bodyTextContent.includes('не знайдено') || bodyTextContent.includes('not found')) {
+          throw new Error('Monobank jar not found or has been removed');
+        }
+        
+        // Якщо причина не визначена, передаємо оригінальну помилку
+        throw waitError;
+      }
       
       const data = await page.evaluate(() => {
         const getText = (selector: string) => {
           const el = document.querySelector(selector);
           return el ? el.textContent?.trim() : null;
         };
+        
+        // Більш надійний спосіб отримати елементи: знаходимо по іконках або унікальних класах
+        const findValueByIcon = (iconSrc: string): string | null => {
+          // Знаходимо всі img елементи
+          const icons = Array.from(document.querySelectorAll('.jar-stats img.icon'));
+          // Знаходимо той, який містить вказаний src
+          const targetIcon = icons.find(icon => (icon as HTMLImageElement).src.includes(iconSrc));
+          
+          if (!targetIcon) return null;
+          
+          // Знаходимо батьківський .stats-data
+          const statsData = targetIcon.closest('.stats-data');
+          if (!statsData) return null;
+          
+          // Отримуємо .stats-data-value з цього контейнера
+          const valueElement = statsData.querySelector('.stats-data-value');
+          return valueElement ? valueElement.textContent?.trim() || null : null;
+        };
+        
+        // Основний заголовок збору
+        const title = getText('header .field.name h1');
+        
+        // Знаходимо значення за їх іконками
+        const collected = findValueByIcon('collected.svg');
+        const target = findValueByIcon('target.svg');
+        
+        // Запасний варіант, якщо пошук за іконками не спрацював
+        const collectedBackup = getText('header .jar-stats > div:nth-child(1) .stats-data-value');
+        const targetBackup = getText('header .jar-stats > div:nth-child(2) .stats-data-value');
+        
+        // Отримання тексту власника збору
+        const ownerInfo = getText('.field.jarOwnerInfo span');
+        
         return {
-          title: getText('header .field.name h1'),
-          collected: getText('header .jar-stats > div:nth-child(1) .stats-data-value'),
-          target: getText('header .jar-stats > div:nth-child(2) .stats-data-value'),
+          title,
+          collected: collected || collectedBackup,
+          target: target || targetBackup,
+          _debug: {
+            ownerInfo, // тільки для діагностики, не повертаємо клієнту
+            collectedFound: !!collected,
+            targetFound: !!target,
+            usedBackup: !collected || !target
+          }
         };
       });
       
+      // Типізація для результату парсингу
+      interface ParsedData {
+        title: string | null;
+        collected: string | null;
+        target: string | null;
+        _debug?: {
+          ownerInfo: string | null;
+          collectedFound: boolean;
+          targetFound: boolean;
+          usedBackup: boolean;
+        };
+      }
+      
+      // Приведення типу
+      const parsedData = data as ParsedData;
+      
+      // Закриваємо браузер перед будь-якими іншими операціями
       await browser.close();
+      
+      // Валідуємо отримані дані
+      if (!parsedData.title || !parsedData.collected || !parsedData.target) {
+        console.warn(`Incomplete parse results for ${jarUrl}. Got: title=${parsedData.title}, collected=${parsedData.collected}, target=${parsedData.target}`);
+        if (parsedData._debug) {
+          console.debug('Debug info:', parsedData._debug);
+        }
+      } else {
+        console.info(`Successfully parsed jar data: "${parsedData.title}" - ${parsedData.collected} of ${parsedData.target}`);
+      }
+      
+      // Видаляємо діагностичні дані перед відправкою клієнту
+      if (parsedData._debug) {
+        delete parsedData._debug;
+      }
       
       // Кешування результатів можна додати тут в майбутньому
       
-      res.json(data);
+      res.json(parsedData);
     } catch (innerError) {
       await browser.close();
       throw innerError;
@@ -236,4 +396,37 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT} in ${NODE_ENV} mode`);
-}); 
+});
+
+// Функція для перевірки доступності URL
+function checkUrlAvailability(url: string, timeout: number = 5000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const parsedUrl = new URL(url);
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || 443,
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: 'HEAD',
+      timeout: timeout,
+    };
+
+    const req = https.request(options, (res) => {
+      // Перевіряємо HTTP статус
+      const statusCode = res.statusCode || 0;
+      const statusOk = statusCode >= 200 && statusCode < 400;
+      resolve(statusOk);
+    });
+
+    req.on('error', () => {
+      // У випадку помилки вважаємо URL недоступним
+      resolve(false);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+
+    req.end();
+  });
+} 
