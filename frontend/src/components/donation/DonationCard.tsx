@@ -48,7 +48,7 @@ const DonationCard = memo(function DonationCard({
   progress 
 }: DonationCardProps) {
   return (
-    <div className="card donation-card w-full md:max-w-[480px] box-border m-0">
+    <div className="card donation-card w-full rounded-lg overflow-hidden">
       {/* Заголовок */}
       <div className="donation-card-header">
         <h2 className="donation-card-title not-italic">
@@ -63,7 +63,7 @@ const DonationCard = memo(function DonationCard({
           {jarUrl ? (
             <QRCode 
               value={jarUrl} 
-              size={220}
+              size={200}
               bgColor="white"
               fgColor="#000000"
               className="h-auto max-w-full w-full"

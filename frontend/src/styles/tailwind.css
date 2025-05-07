@@ -20,7 +20,7 @@
   }
 
   html.dark {
-    @apply bg-bg-dark;
+    @apply bg-[#111111];
   }
 
   html.light {
@@ -34,7 +34,7 @@
   }
 
   .dark body {
-    @apply text-text-light bg-bg-dark;
+    @apply text-text-light bg-[#111111];
   }
 
   .light body {
@@ -78,7 +78,7 @@
 @layer components {
   /* Картки */
   .card {
-    @apply rounded-card overflow-hidden border transition-colors duration-300 ease-in-out;
+    @apply rounded-card overflow-hidden border transition-colors duration-300 ease-in-out w-full;
   }
   
   .dark .card {
@@ -130,7 +130,7 @@
     @apply py-3 flex justify-between items-center mb-2 w-full z-10 border-b transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-header { @apply bg-dark-bg border-white-10; }
+  .dark .app-header { @apply bg-[rgba(28,28,30,0.95)] border-white-10; }
   .light .app-header { @apply bg-white border-gray-300; }
   
   .header-container { @apply flex justify-between items-center w-full; }
@@ -188,7 +188,7 @@
     @apply w-full mt-2 py-5 border-t transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-about-wrapper { @apply bg-dark-section border-white-3; }
+  .dark .app-about-wrapper { @apply bg-[rgba(28,28,30,0.5)] border-white-3; }
   .light .app-about-wrapper { @apply bg-gray-50 border-gray-300; }
   
   .app-about-section { @apply w-full flex justify-center; }
@@ -214,7 +214,7 @@
     @apply w-full text-center py-4 border-t transition-colors duration-theme ease-theme;
   }
   
-  .dark .app-footer { @apply text-white-70 border-white-10 bg-dark-bg; }
+  .dark .app-footer { @apply text-white-70 border-white-10 bg-[rgba(28,28,30,0.95)]; }
   .light .app-footer { @apply text-gray-600 border-gray-300 bg-white; }
   
   .app-footer-content { @apply flex items-center justify-center gap-3 font-ui font-medium text-sm; }
@@ -270,7 +270,7 @@
   
   /* DonationCard компонент */
   .donation-card { 
-    @apply w-full rounded-card overflow-hidden border transition-colors duration-300 ease-in-out;
+    @apply bg-[#222222] shadow-card border border-gray-200 transition-colors duration-300 ease-in-out w-full;
   }
   
   .dark .donation-card { 
@@ -282,7 +282,7 @@
   }
   
   /* Шапка картки має темний фон в обох темах для кращої контрастності */
-  .donation-card-header { @apply p-4 bg-secondary text-center rounded-t-card; }
+  .donation-card-header { @apply p-4 bg-secondary text-center rounded-t-lg; }
   
   /* Базові стилі заголовку */
   .donation-card-title {
@@ -302,26 +302,33 @@
   }
   
   /* Контент донейт-картки */
-  .donation-card-content { @apply p-6 flex flex-col items-center gap-6; }
+  .donation-card-content { 
+    @apply p-4 flex flex-col items-center gap-4; 
+  }
+  
+  /* Спільні стилі для блоків всередині картки */
+  .donation-card-content > * {
+    @apply w-[90%];
+  }
   
   /* QR-код */
   .donation-card-qr { 
-    @apply p-5 bg-white rounded-lg w-auto mx-auto flex justify-center items-center;
-    max-width: 85%;
+    @apply p-4 bg-white rounded-lg mx-auto flex justify-center items-center;
   }
 
-  .dark .donation-card-qr { @apply shadow-qr hover:shadow-lg; }
-  .light .donation-card-qr { @apply shadow-qr-light hover:shadow-hover-light; }
+  .dark .donation-card-qr { @apply shadow-qr; }
+  .light .donation-card-qr { @apply shadow-qr-light; }
   
+  /* QR-код плейсхолдер */
   .donation-card-qr-placeholder {
-    @apply w-[220px] h-[220px] flex items-center justify-center bg-gray-100 rounded-lg;
+    @apply w-[180px] h-[180px] flex items-center justify-center bg-gray-100 rounded-lg;
   }
   
   .donation-card-qr-placeholder-text { @apply text-sm text-gray-600 font-ui; }
   
-  /* Статистика донацій (компактніший варіант) */
+  /* Статистика донацій */
   .donation-card-stats { 
-    @apply flex justify-center items-center w-full py-4 px-2 rounded-xl relative;
+    @apply flex justify-center items-center py-3 px-2 rounded-xl relative;
   }
   
   .dark .donation-card-stats { @apply bg-white-5; }
@@ -331,9 +338,9 @@
     @apply flex-1 flex flex-col items-center py-1;
   }
   
-  /* Вертикальний розділювач зменшений */
+  /* Вертикальний розділювач */
   .donation-stats-divider {
-    @apply h-12 w-px mx-3;
+    @apply h-10 w-px mx-3;
   }
   
   .dark .donation-stats-divider { @apply bg-white-10; }
@@ -360,11 +367,11 @@
     @apply w-6 h-6 mr-2;
   }
   
-  .dark .donation-card-icon { @apply text-primary; }
-  .light .donation-card-icon { @apply text-gray-800; }
+  .dark .donation-card-icon { @apply text-white-70; }
+  .light .donation-card-icon { @apply text-gray-700; }
   
   /* Прогрес-бар */
-  .donation-card-progress { @apply w-full mt-1; }
+  .donation-card-progress { @apply mt-1; }
   .donation-card-progress-bar { @apply w-full h-[0.6rem] rounded-full overflow-hidden; }
   
   .dark .donation-card-progress-bar { @apply bg-white-10; }
@@ -375,7 +382,7 @@
   .dark .donation-card-progress-value { @apply bg-gradient-primary; }
   .light .donation-card-progress-value { @apply bg-primary; }
   
-  .donation-card-progress-text { @apply flex justify-between items-center mt-2; }
+  .donation-card-progress-text { @apply flex justify-between items-center mt-2 w-full; }
   .donation-card-progress-label { @apply text-sm font-ui; }
   
   .dark .donation-card-progress-label { @apply text-white-50; }
@@ -451,9 +458,9 @@
     .app-header { @apply py-2; }
     .app-title { @apply text-2xl; }
     .container { @apply px-4; }
+    .donation-card, .status-info-card, .app-info-card { @apply max-w-[400px] mx-auto; }
     .donation-card-content { @apply p-5; }
     .donation-card-stats { @apply gap-3; }
-    .status-info-card, .app-info-card { @apply p-5; }
   }
   
   /* Мобільні пристрої (загальні стилі) */
@@ -464,7 +471,7 @@
   
   /* Планшети і десктопи */
   @media screen and (min-width: 769px) {
-    .donation-card { @apply max-w-[480px] mx-auto; }
+    .donation-card, .status-info-card, .app-info-card { @apply max-w-[420px] mx-auto; }
   }
   
   /* Планшети */
@@ -490,13 +497,23 @@
 
 /* Анімації */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .spinner { animation: spin 1s linear infinite; }
 
-/* Custom scrollbar */
+@keyframes progressAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient {
+  background-size: 200% auto;
+  animation: progressAnimation 2s linear infinite;
+}
+
 ::-webkit-scrollbar { @apply w-2; }
 ::-webkit-scrollbar-track { @apply rounded-full; }
 ::-webkit-scrollbar-thumb { @apply rounded-full; }

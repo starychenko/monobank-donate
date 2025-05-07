@@ -59,10 +59,11 @@ export function App() {
       <Header theme={theme} onToggleTheme={toggleTheme} />
       
       <main className="app-content">
-        <div className="container pb-4 px-2 sm:px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full">
-            {/* Картка з донатами */}
-            <div className="w-full flex justify-center">
+        <div className="container px-4 py-4 mx-auto">
+          {/* Використовуємо гнучкіший підхід до сітки */}
+          <div className="flex flex-col lg:flex-row gap-5 lg:gap-8 justify-center">
+            {/* Колонка з QR-кодом - адаптивна ширина з максимальним обмеженням */}
+            <div className="flex-1 max-w-[420px] mx-auto lg:mx-0 w-full">
               <DonationCard
                 collected={data?.collected}
                 target={data?.target}
@@ -71,16 +72,16 @@ export function App() {
               />
             </div>
             
-            {/* Блок з інформацією */}
-            <div className="w-full flex justify-center">
-              <div className="w-full md:max-w-[480px] flex flex-col gap-3 sm:gap-4 md:gap-5">
-                <StatusInfo 
-                  loading={loading} 
-                  error={error} 
-                  lastUpdated={lastUpdated}
-                  updateInterval={UPDATE_INTERVAL}
-                  onCountdownComplete={triggerUpdate}
-                />
+            {/* Колонка з інформацією - адаптивна ширина з максимальним обмеженням */}
+            <div className="flex-1 max-w-[420px] mx-auto lg:mx-0 w-full">
+              <StatusInfo 
+                loading={loading} 
+                error={error} 
+                lastUpdated={lastUpdated}
+                updateInterval={UPDATE_INTERVAL}
+                onCountdownComplete={triggerUpdate}
+              />
+              <div className="mt-5">
                 <InfoCard 
                   title="Збір для ЗСУ" 
                   description={data?.description || 'Опис збору відсутній'} 
