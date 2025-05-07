@@ -48,7 +48,7 @@ const DonationCard = memo(function DonationCard({
   progress 
 }: DonationCardProps) {
   return (
-    <div className="card donation-card">
+    <div className="card donation-card w-full md:max-w-[480px] box-border m-0">
       {/* Заголовок */}
       <div className="donation-card-header">
         <h2 className="donation-card-title not-italic">
@@ -59,13 +59,7 @@ const DonationCard = memo(function DonationCard({
       {/* QR-код і дані */}
       <div className="donation-card-content">
         {/* QR-код */}
-        <div 
-          className="donation-card-qr"
-          style={{ 
-            transition: 'transform 0.3s ease',
-            transform: jarUrl ? 'scale(1)' : 'scale(0.97)',
-          }}
-        >
+        <div className="donation-card-qr">
           {jarUrl ? (
             <QRCode 
               value={jarUrl} 
@@ -83,12 +77,7 @@ const DonationCard = memo(function DonationCard({
 
         {/* Суми в картках */}
         <div className="donation-card-stats">
-          <div 
-            className="donation-card-stat"
-            style={{ 
-              transition: 'all 0.3s ease'
-            }}
-          >
+          <div className="donation-card-stat">
             <span className="donation-card-stat-label">
               Накопичено
             </span>
@@ -113,18 +102,5 @@ const DonationCard = memo(function DonationCard({
     </div>
   );
 });
-
-// Визначаємо стилі анімації
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 export { DonationCard }; 

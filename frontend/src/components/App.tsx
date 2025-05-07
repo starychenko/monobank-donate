@@ -59,19 +59,21 @@ export function App() {
       <Header theme={theme} onToggleTheme={toggleTheme} />
       
       <main className="app-content">
-        <div className="container">
-          <div className="app-main">
-            <div className="app-grid">
-              <div className="app-card-container">
-                <DonationCard
-                  collected={data?.collected}
-                  target={data?.target}
-                  jarUrl={JAR_URL}
-                  progress={progress}
-                />
-              </div>
-              
-              <div className="app-info-container">
+        <div className="container pb-4 px-2 sm:px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full">
+            {/* Картка з донатами */}
+            <div className="w-full flex justify-center">
+              <DonationCard
+                collected={data?.collected}
+                target={data?.target}
+                jarUrl={JAR_URL}
+                progress={progress}
+              />
+            </div>
+            
+            {/* Блок з інформацією */}
+            <div className="w-full flex justify-center">
+              <div className="w-full md:max-w-[480px] flex flex-col gap-3 sm:gap-4 md:gap-5">
                 <StatusInfo 
                   loading={loading} 
                   error={error} 

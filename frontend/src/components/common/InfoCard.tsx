@@ -48,20 +48,9 @@ const InfoCard = memo(function InfoCard({ title, description, jarUrl }: InfoCard
           href={jarUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="gradient-button"
-          style={{ 
-            transition: 'all 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
+          className="gradient-button transition-all duration-300 relative overflow-hidden"
         >
-          <span style={{ 
-            position: 'relative', 
-            zIndex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
+          <span className="relative z-10 flex items-center gap-2">
             Долучитись до збору
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
