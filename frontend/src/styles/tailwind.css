@@ -268,6 +268,28 @@
   .dark .status-info-time { @apply text-white-60; }
   .light .status-info-time { @apply text-gray-700; }
   
+  /* Годинник і секунди відліку */
+  .status-info-clock-icon {
+    @apply transition-colors duration-200;
+  }
+  
+  .dark .status-info-clock-icon { @apply text-primary; }
+  .light .status-info-clock-icon { @apply text-gray-900; }
+  
+  .status-info-seconds {
+    @apply transition-colors duration-200;
+  }
+  
+  .dark .status-info-seconds { @apply text-primary; }
+  .light .status-info-seconds { @apply text-gray-900; }
+  
+  .status-info-clock-small {
+    @apply transition-colors duration-200;
+  }
+  
+  .dark .status-info-clock-small { @apply text-white-60; }
+  .light .status-info-clock-small { @apply text-gray-900; }
+  
   /* DonationCard компонент */
   .donation-card { 
     @apply bg-[#222222] shadow-card border border-gray-200 transition-colors duration-300 ease-in-out w-full;
@@ -328,19 +350,19 @@
   
   /* Статистика донацій */
   .donation-card-stats { 
-    @apply flex justify-center items-center py-3 px-2 rounded-xl relative;
+    @apply flex justify-between items-center py-3 px-4 rounded-xl relative;
   }
   
   .dark .donation-card-stats { @apply bg-white-5; }
   .light .donation-card-stats { @apply bg-gray-100; }
   
   .donation-card-stat { 
-    @apply flex-1 flex flex-col items-center py-1;
+    @apply flex-1 flex flex-col items-center justify-center py-1 px-2 text-center;
   }
   
   /* Вертикальний розділювач */
   .donation-stats-divider {
-    @apply h-10 w-px mx-3;
+    @apply h-12 w-[1.5px] mx-2;
   }
   
   .dark .donation-stats-divider { @apply bg-white-10; }
@@ -356,7 +378,7 @@
   
   /* Значення статистики з іконками */
   .donation-card-stat-value { 
-    @apply font-bold text-lg font-ui; 
+    @apply font-bold text-lg font-ui whitespace-nowrap; 
   }
   
   .dark .donation-card-stat-value { @apply text-primary; }
@@ -364,7 +386,7 @@
   
   /* Іконки біля значень */
   .donation-card-icon {
-    @apply w-6 h-6 mr-2;
+    @apply w-5 h-5 inline-flex flex-shrink-0;
   }
   
   .dark .donation-card-icon { @apply text-white-70; }
