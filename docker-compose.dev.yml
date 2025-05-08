@@ -20,8 +20,6 @@ services:
       - monobank-network
     environment:
       - NODE_ENV=development
-    volumes:
-      - ./frontend:/app/frontend-src:ro
 
   backend:
     build:
@@ -49,8 +47,6 @@ services:
       - "3001:3001"
     networks:
       - monobank-network
-    volumes:
-      - ./backend:/app/backend-src:ro
 
 networks:
   monobank-network:
