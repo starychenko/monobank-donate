@@ -5,6 +5,12 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         - VITE_API_URL=http://localhost:3001/api/parse-monobank
+        - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
+        - VITE_UPDATE_INTERVAL=15000
+        - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=1
+        - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=1
+        - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1
+        - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
     container_name: monobank-donate-frontend
     ports:
       - "80:80"
@@ -14,12 +20,6 @@ services:
       - monobank-network
     environment:
       - NODE_ENV=development
-      - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
-      - VITE_UPDATE_INTERVAL=15000
-      - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=2
-      - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=5
-      - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1000
-      - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
     volumes:
       - ./frontend:/app/frontend-src:ro
 
@@ -31,7 +31,7 @@ services:
     environment:
       - NODE_ENV=development
       - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://frontend:80
-      - DEFAULT_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
+      - DEFAULT_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
       - CACHE_TTL=15
       - RATE_LIMIT_GLOBAL_MAX=1000
       - RATE_LIMIT_PARSE_MAX=100
