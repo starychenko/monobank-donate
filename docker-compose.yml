@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-      args:
-        - VITE_API_URL=http://localhost:3001/api/parse-monobank
     container_name: monobank-donate-frontend
     ports:
       - "80:80"
@@ -12,6 +10,16 @@ services:
       - backend
     networks:
       - monobank-network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
+      - VITE_UPDATE_INTERVAL=15000
+      - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=2
+      - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=5
+      - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1000
+      - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
+
 
   backend:
     build:
@@ -20,12 +28,27 @@ services:
     container_name: monobank-donate-backend
     environment:
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://frontend:80
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80
+      - DEFAULT_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
+      - CACHE_TTL=15
+      - RATE_LIMIT_GLOBAL_MAX=1000
+      - RATE_LIMIT_PARSE_MAX=100
+      - RATE_LIMIT_BRUTEFORCE_MAX=50
+      - REQUEST_SIZE_LIMIT=10kb
+      - PUPPETEER_NAVIGATION_TIMEOUT=30000
+      - PUPPETEER_WAIT_TIMEOUT=15000
+      - PUPPETEER_STATS_TIMEOUT=10000
+      - MAX_RETRIES=3
+      - RETRY_INITIAL_DELAY=1000
+      - SCREENSHOTS_ENABLED=true
+      - SCREENSHOTS_PATH=monobank-error.png
+
     ports:
       - "3001:3001"
     networks:
       - monobank-network
+    restart: unless-stopped
 
 networks:
   monobank-network:
-    driver: bridge 
+    driver: bridge

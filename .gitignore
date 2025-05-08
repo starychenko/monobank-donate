@@ -33,4 +33,5 @@ yarn-error.log*
 /backend/logs/
 
 # Інше
-.cursor 
+.cursor
+backups
