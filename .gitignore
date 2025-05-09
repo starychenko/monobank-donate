@@ -32,6 +32,15 @@ yarn-error.log*
 /backend/coverage/
 /backend/logs/
 
+# SSL сертифікати (щоб не потрапляли у репозиторій з міркувань безпеки)
+/ssl/*.key
+/ssl/*.crt
+/ssl/*.pem
+/ssl/*.srl
+/ssl/*.csr
+
+# Ігноруємо всі резервні копії
+backups/
+
 # Інше
 .cursor
-backups

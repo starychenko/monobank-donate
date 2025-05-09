@@ -13,6 +13,11 @@ VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/YOUR_JAR_ID
 # Інтервал оновлення в мс (15 секунд)
 VITE_UPDATE_INTERVAL=15000
 
+# HTTPS налаштування
+VITE_USE_HTTPS=false
+VITE_DOMAIN=localhost
+VITE_API_URL=http://localhost:3001/api/parse-monobank
+
 # Налаштування сповіщень
 # Поріг для сповіщень: відсоток від цільової суми (%)
 VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=2
@@ -33,6 +38,9 @@ function getFrontendEnvVarDescription(key) {
   const descriptions = {
     'VITE_MONOBANK_JAR_URL': 'URL банки Monobank',
     'VITE_UPDATE_INTERVAL': 'Інтервал оновлення даних (мс)',
+    'VITE_USE_HTTPS': 'Використовувати HTTPS (true/false)',
+    'VITE_DOMAIN': 'Домен для підключення (наприклад: localhost, mydomain.com)',
+    'VITE_API_URL': 'URL для API бекенду (із протоколом, повний)',
     'VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT': 'Поріг для сповіщень: відсоток від цільової суми (%)',
     'VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT': 'Поріг для сповіщень: відсоток від поточної суми (%)',
     'VITE_NOTIFICATION_THRESHOLD_ABSOLUTE': 'Поріг для сповіщень: абсолютне значення (грн)',

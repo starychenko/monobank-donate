@@ -32,10 +32,27 @@ function createBackup(type = 'auto') {
   try {
     // Копіюємо конфігураційні файли
     const filesToBackup = [
+      // Docker-файли
       { path: 'docker-compose.yml', required: false },
       { path: 'docker-compose.dev.yml', required: false },
+      { path: 'Dockerfile.frontend', required: false },
+      { path: 'Dockerfile.backend', required: false },
+      { path: '.dockerignore', required: false },
+      
+      // Frontend файли
       { path: path.join('frontend', '.env'), required: false },
-      { path: path.join('backend', '.env'), required: false }
+      { path: path.join('frontend', '.env.example'), required: false },
+      { path: path.join('frontend', 'vite.config.ts'), required: false },
+      { path: path.join('frontend', 'nginx.conf'), required: false },
+      
+      // Backend файли
+      { path: path.join('backend', '.env'), required: false },
+      { path: path.join('backend', '.env.example'), required: false },
+      
+      // SSL сертифікати
+      { path: path.join('ssl', 'server.key'), required: false },
+      { path: path.join('ssl', 'server.crt'), required: false },
+      { path: path.join('ssl', 'openssl.cnf'), required: false }
     ];
     
     let backedUpFiles = 0;
@@ -45,8 +62,13 @@ function createBackup(type = 'auto') {
       
       try {
         if (fileExists(fullPath)) {
+          // Створюємо підкаталоги у бекапі, якщо потрібно
+          const targetDir = path.dirname(path.join(backupPath, file.path));
+          ensureDirectoryExists(targetDir);
+          
+          // Читаємо та зберігаємо файл, зберігаючи оригінальну структуру директорій
           const content = fs.readFileSync(fullPath, 'utf8');
-          const targetPath = path.join(backupPath, file.path.replace(/\//g, '-'));
+          const targetPath = path.join(backupPath, file.path);
           fs.writeFileSync(targetPath, content, 'utf8');
           backedUpFiles++;
         } else if (file.required) {
@@ -56,6 +78,47 @@ function createBackup(type = 'auto') {
         // Якщо помилка при роботі з окремим файлом, логуємо і продовжуємо
         log.warning(`Помилка при резервному копіюванні файлу ${file.path}: ${fileError.message}`);
       }
+    }
+    
+    // Обмежуємо кількість резервних копій (зберігаємо останні 10)
+    try {
+      const allBackups = fs.readdirSync(backupDir)
+        .filter(item => fs.statSync(path.join(backupDir, item)).isDirectory())
+        .sort((a, b) => {
+          const timeA = fs.statSync(path.join(backupDir, a)).mtime.getTime();
+          const timeB = fs.statSync(path.join(backupDir, b)).mtime.getTime();
+          return timeA - timeB; // Сортуємо за часом створення (старі спочатку)
+        });
+      
+      // Видаляємо старі резервні копії, якщо їх більше 10
+      const maxBackups = 10;
+      if (allBackups.length > maxBackups) {
+        const backupsToDelete = allBackups.slice(0, allBackups.length - maxBackups);
+        
+        for (const backupToDelete of backupsToDelete) {
+          const backupPath = path.join(backupDir, backupToDelete);
+          
+          // Рекурсивна функція для видалення директорії
+          const removeDir = (dirPath) => {
+            if (fs.existsSync(dirPath)) {
+              fs.readdirSync(dirPath).forEach(file => {
+                const filePath = path.join(dirPath, file);
+                if (fs.statSync(filePath).isDirectory()) {
+                  removeDir(filePath);
+                } else {
+                  fs.unlinkSync(filePath);
+                }
+              });
+              fs.rmdirSync(dirPath);
+            }
+          };
+          
+          removeDir(backupPath);
+          log.info(`Видалено стару резервну копію: ${backupToDelete}`);
+        }
+      }
+    } catch (rotationError) {
+      log.warning(`Помилка при ротації резервних копій: ${rotationError.message}`);
     }
     
     if (backedUpFiles > 0) {

@@ -16,6 +16,12 @@ CACHE_TTL=15
 # Безпека
 ALLOWED_ORIGINS=http://localhost:5173,https://your-frontend-domain.com
 
+# HTTPS налаштування
+USE_HTTPS=false
+DOMAIN=localhost
+SSL_KEY_PATH=
+SSL_CERT_PATH=
+
 # Режим для розробки
 NODE_ENV=development
 
@@ -49,6 +55,10 @@ function getBackendEnvVarDescription(key) {
     'DEFAULT_JAR_URL': 'URL банки Monobank за замовчуванням',
     'CACHE_TTL': 'Час життя кешу (секунди)',
     'ALLOWED_ORIGINS': 'Дозволені джерела для CORS (через кому)',
+    'USE_HTTPS': 'Використовувати HTTPS (true/false)',
+    'DOMAIN': 'Домен для підключення (наприклад: localhost, mydomain.com)',
+    'SSL_KEY_PATH': 'Шлях до приватного ключа SSL',
+    'SSL_CERT_PATH': 'Шлях до SSL-сертифіката',
     'NODE_ENV': 'Режим роботи (development/production)',
     'RATE_LIMIT_GLOBAL_MAX': 'Глобальний максимум запитів',
     'RATE_LIMIT_PARSE_MAX': 'Максимум запитів на парсинг',

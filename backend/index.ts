@@ -9,6 +9,8 @@ import helmet from 'helmet';
 import { xss } from 'express-xss-sanitizer';
 import https from 'https';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -17,6 +19,10 @@ const PORT = 3001;
 const DEFAULT_JAR_URL = process.env.DEFAULT_JAR_URL || '';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
+const USE_HTTPS = process.env.USE_HTTPS === 'true';
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || '';
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || '';
+const DOMAIN = process.env.DOMAIN || 'localhost';
 
 // Налаштування обмежень для rate limit
 const RATE_LIMIT_GLOBAL_MAX = Number(process.env.RATE_LIMIT_GLOBAL_MAX) || (IS_PRODUCTION ? 300 : 1000);
@@ -42,7 +48,15 @@ app.use(helmet());
 
 // Налаштування CORS
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:80', 'http://localhost:5173', 'http://frontend:80', 'http://frontend:5173'],
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
+    'http://localhost:80', 
+    'http://localhost:5173', 
+    'http://frontend:80', 
+    'http://frontend:5173',
+    'https://localhost:80',
+    'https://localhost:443',
+    'https://localhost:5173'
+  ],
   methods: ['POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
   credentials: true
@@ -414,23 +428,61 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT} in ${NODE_ENV} mode`);
-});
+// Створення HTTP або HTTPS сервера залежно від конфігурації
+if (USE_HTTPS && SSL_KEY_PATH && SSL_CERT_PATH) {
+  try {
+    const httpsOptions = {
+      key: fs.readFileSync(SSL_KEY_PATH),
+      cert: fs.readFileSync(SSL_CERT_PATH)
+    };
+    
+    // Створюємо HTTPS сервер
+    https.createServer(httpsOptions, app).listen(PORT, () => {
+      console.log(`HTTPS Server started on port ${PORT} in ${NODE_ENV} mode`);
+      console.log(`Domain: ${DOMAIN}`);
+      console.log(`Using SSL certificates: 
+        - Key: ${SSL_KEY_PATH}
+        - Cert: ${SSL_CERT_PATH}`);
+    });
+    
+    // Додатково створюємо HTTP сервер, який перенаправляє на HTTPS
+    http.createServer((req, res) => {
+      const redirectUrl = `https://${req.headers.host?.split(':')[0] || DOMAIN}:${PORT}${req.url}`;
+      res.writeHead(301, { 'Location': redirectUrl });
+      res.end();
+    }).listen(80, () => {
+      console.log(`HTTP Server started on port 80 with redirect to HTTPS`);
+    });
+  } catch (error) {
+    console.error('Failed to start HTTPS server:', error);
+    console.warn('Falling back to HTTP server...');
+    
+    // Якщо не вдалося запустити HTTPS сервер, запускаємо HTTP як запасний варіант
+    app.listen(PORT, () => {
+      console.log(`HTTP Server started on port ${PORT} in ${NODE_ENV} mode (fallback)`);
+    });
+  }
+} else {
+  // Звичайний HTTP сервер
+  app.listen(PORT, () => {
+    console.log(`HTTP Server started on port ${PORT} in ${NODE_ENV} mode`);
+  });
+}
 
 // Функція для перевірки доступності URL
 function checkUrlAvailability(url: string, timeout: number = 5000): Promise<boolean> {
   return new Promise((resolve) => {
     const parsedUrl = new URL(url);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
     const options = {
       hostname: parsedUrl.hostname,
-      port: parsedUrl.port || 443,
+      port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
       path: parsedUrl.pathname + parsedUrl.search,
       method: 'HEAD',
       timeout: timeout,
     };
 
-    const req = https.request(options, (res) => {
+    const req = protocol.request(options, (res) => {
       // Перевіряємо HTTP статус
       const statusCode = res.statusCode || 0;
       const statusOk = statusCode >= 200 && statusCode < 400;
@@ -449,4 +501,14 @@ function checkUrlAvailability(url: string, timeout: number = 5000): Promise<bool
 
     req.end();
   });
-} 
+}
+
+// Додаємо обробник для отримання інформації про сервер
+app.get('/api/server-info', (req, res) => {
+  res.json({
+    mode: NODE_ENV,
+    https: USE_HTTPS,
+    domain: DOMAIN,
+    timestamp: new Date().toISOString()
+  });
+}); 

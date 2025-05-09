@@ -168,6 +168,43 @@ async function configureAll(rl, showMainMenu, dockerManager, dockerIgnoreManager
       useVolumeForBackend
     });
     
+    // Крок 5: Налаштування HTTPS
+    log.title('Крок 5: Налаштування HTTPS');
+    
+    const setupHttps = await new Promise((resolve) => {
+      rl.question(`${colors.yellow}Бажаєте налаштувати HTTPS для проекту? (y/n): ${colors.reset}`, (answer) => {
+        resolve(answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes');
+      });
+    });
+    
+    if (setupHttps) {
+      // Імпортуємо модуль для налаштування HTTPS
+      const { setupSSLCertificates } = require('../https/certificates');
+      const { configureHttps } = require('../https/https-config');
+      
+      // Запитуємо домен
+      const domain = await new Promise((resolve) => {
+        rl.question(`${colors.yellow}Введіть домен для використання з HTTPS (localhost): ${colors.reset}`, (answer) => {
+          resolve(answer.trim() || 'localhost');
+        });
+      });
+      
+      log.info(`Обрано домен: ${domain}`);
+      
+      // Генеруємо або використовуємо існуючі сертифікати
+      const certResult = await setupSSLCertificates(rl, domain);
+      
+      if (certResult.success) {
+        // Конфігуруємо проект для підтримки HTTPS
+        await configureHttps(rl, domain, certResult);
+        log.success('HTTPS налаштування завершено успішно!');
+      } else {
+        log.warning('HTTPS не налаштовано. Проект буде працювати через HTTP.');
+      }
+    } else {
+      log.info('HTTPS не буде налаштовано. Проект буде працювати через HTTP.');
+    }
+    
     log.success('\nПовне налаштування проекту завершено!');
     log.success('Проект готовий до запуску.');
     

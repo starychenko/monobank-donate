@@ -56,8 +56,43 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    return registration;
+    // Перевірка протоколу
+    const isHttps = window.location.protocol === 'https:';
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+    if (isHttps) {
+      // При використанні HTTPS можуть виникати проблеми з самопідписаними сертифікатами
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('Service Worker успішно зареєстровано');
+        return registration;
+      } catch (error) {
+        // В разі помилки SSL виводимо більш інформативне повідомлення
+        if (error instanceof Error && 
+            (error.name === 'SecurityError' || error.message.includes('SSL certificate'))) {
+          console.warn(
+            'Помилка реєстрації сервіс-воркера через проблему з SSL сертифікатом. ' +
+            'Для локальної розробки: відкрийте https://localhost:5173/sw.js напряму ' +
+            'і прийміть ризик відвідування цього сайту.'
+          );
+        } else {
+          console.error('Помилка реєстрації сервіс-воркера:', error);
+        }
+        return null;
+      }
+    } else if (isLocalhost) {
+      // HTTP + localhost працює нормально для розробки
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker успішно зареєстровано (localhost)');
+      return registration;
+    } else {
+      console.warn(
+        'Service Worker не може бути зареєстрований: потрібен HTTPS ' +
+        'або localhost для роботи сповіщень'
+      );
+      return null;
+    }
   } catch (error) {
     console.error('Помилка реєстрації сервіс-воркера:', error);
     return null;

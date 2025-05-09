@@ -15,6 +15,10 @@ const { parseEnvFile } = require('../utils/fs-helpers');
  * @param {string} settings.backendPort - Порт для backend
  * @param {boolean} settings.useVolumeForFrontend - Використовувати том для frontend
  * @param {boolean} settings.useVolumeForBackend - Використовувати том для backend
+ * @param {boolean} [settings.useHttps=false] - Використовувати HTTPS
+ * @param {string} [settings.domain] - Домен для HTTPS
+ * @param {string} [settings.sslCertPath] - Шлях до SSL-сертифікату
+ * @param {string} [settings.sslKeyPath] - Шлях до приватного ключа
  * @returns {Promise<boolean>} - Результат операції
  */
 async function generateDockerComposeFiles(settings) {
@@ -49,13 +53,38 @@ async function generateDockerComposeFiles(settings) {
   let backendDevEnvConfig = `      - NODE_ENV=development\n`;
   
   // Додаємо ALLOWED_ORIGINS для backend, який містить frontendPort
-  backendEnvConfig += `      - ALLOWED_ORIGINS=http://localhost,http://localhost:${settings.frontendPort}\n`;
-  backendDevEnvConfig += `      - ALLOWED_ORIGINS=http://localhost,http://localhost:${settings.frontendPort},http://frontend,http://frontend:80\n`;
+  const protocol = settings.useHttps ? 'https' : 'http';
+  const frontendHostname = settings.domain || 'localhost';
+  
+  if (settings.useHttps) {
+    backendEnvConfig += `      - USE_HTTPS=true\n`;
+    backendDevEnvConfig += `      - USE_HTTPS=true\n`;
+    
+    // Додаємо шляхи до сертифікатів в середовищі контейнера
+    backendEnvConfig += `      - SSL_KEY_PATH=/app/ssl/server.key\n`;
+    backendEnvConfig += `      - SSL_CERT_PATH=/app/ssl/server.crt\n`;
+    backendDevEnvConfig += `      - SSL_KEY_PATH=/app/ssl/server.key\n`;
+    backendDevEnvConfig += `      - SSL_CERT_PATH=/app/ssl/server.crt\n`;
+    
+    backendEnvConfig += `      - ALLOWED_ORIGINS=${protocol}://${frontendHostname},${protocol}://${frontendHostname}:${settings.frontendPort}\n`;
+    backendDevEnvConfig += `      - ALLOWED_ORIGINS=${protocol}://${frontendHostname},${protocol}://${frontendHostname}:${settings.frontendPort},${protocol}://frontend,${protocol}://frontend:${settings.frontendPort}\n`;
+  } else {
+    backendEnvConfig += `      - ALLOWED_ORIGINS=http://localhost,http://localhost:${settings.frontendPort}\n`;
+    backendDevEnvConfig += `      - ALLOWED_ORIGINS=http://localhost,http://localhost:${settings.frontendPort},http://frontend,http://frontend:80\n`;
+  }
   
   // Підготовка змінних Vite як аргументів збірки для frontend
   // Ці змінні потрібно передати на етапі збірки, а не тільки як змінні середовища
-  let frontendBuildArgs = `        - VITE_API_URL=http://localhost:${settings.backendPort}/api/parse-monobank`;
-  let frontendProdBuildArgs = `        - VITE_API_URL=http://localhost:${settings.backendPort}/api/parse-monobank`;
+  let frontendApiUrl = `${protocol}://${frontendHostname}:${settings.backendPort}/api/parse-monobank`;
+  let frontendBuildArgs = `        - VITE_API_URL=${frontendApiUrl}`;
+  let frontendProdBuildArgs = `        - VITE_API_URL=${frontendApiUrl}`;
+  
+  if (settings.useHttps) {
+    frontendBuildArgs += `\n        - VITE_USE_HTTPS=true`;
+    frontendBuildArgs += `\n        - VITE_DOMAIN=${frontendHostname}`;
+    frontendProdBuildArgs += `\n        - VITE_USE_HTTPS=true`;
+    frontendProdBuildArgs += `\n        - VITE_DOMAIN=${frontendHostname}`;
+  }
   
   // Змінні середовища НЕ Vite для frontend
   let frontendNonViteEnvVars = '';
@@ -64,7 +93,7 @@ async function generateDockerComposeFiles(settings) {
   if (Object.keys(envVars.frontend).length > 0) {
     log.success(`Додаємо ${Object.keys(envVars.frontend).length} змінних frontend до Docker конфігурації`);
     
-    const frontendEnvVarsToIgnore = ['NODE_ENV']; // Змінні, які вже додані або не потрібні
+    const frontendEnvVarsToIgnore = ['NODE_ENV', 'VITE_API_URL', 'VITE_USE_HTTPS', 'VITE_DOMAIN']; // Змінні, які вже додані або не потрібні
     
     for (const [key, value] of Object.entries(envVars.frontend)) {
       if (!frontendEnvVarsToIgnore.includes(key)) {
@@ -86,7 +115,7 @@ async function generateDockerComposeFiles(settings) {
   if (Object.keys(envVars.backend).length > 0) {
     log.success(`Додаємо ${Object.keys(envVars.backend).length} змінних backend до Docker конфігурації`);
     
-    const backendEnvVarsToIgnore = ['NODE_ENV', 'ALLOWED_ORIGINS']; // Змінні, які вже додані
+    const backendEnvVarsToIgnore = ['NODE_ENV', 'ALLOWED_ORIGINS', 'USE_HTTPS', 'SSL_KEY_PATH', 'SSL_CERT_PATH']; // Змінні, які вже додані
     
     for (const [key, value] of Object.entries(envVars.backend)) {
       if (!backendEnvVarsToIgnore.includes(key)) {
@@ -97,7 +126,7 @@ async function generateDockerComposeFiles(settings) {
   }
   
   // Генеруємо docker-compose.yml для продакшну
-  const productionConfig = `services:
+  let productionConfig = `services:
   frontend:
     build:
       context: .
@@ -105,15 +134,35 @@ async function generateDockerComposeFiles(settings) {
       args:
 ${frontendProdBuildArgs}
     container_name: monobank-donate-frontend
-    ports:
-      - "${settings.frontendPort}:80"
+    ports:`;
+  
+  if (settings.useHttps) {
+    productionConfig += `
+      - "${settings.frontendPort}:443"
+      - "80:80"`;
+  } else {
+    productionConfig += `
+      - "${settings.frontendPort}:80"`;
+  }
+  
+  productionConfig += `
     depends_on:
       - backend
     networks:
       - monobank-network
     restart: unless-stopped
     environment:
-${frontendEnvConfig}
+${frontendEnvConfig}`;
+
+  // Додаємо томи для SSL-сертифікатів, якщо використовується HTTPS
+  if (settings.useHttps && settings.sslCertPath && settings.sslKeyPath) {
+    productionConfig += `
+    volumes:
+      - ${settings.sslCertPath}:/etc/nginx/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/etc/nginx/ssl/server.key:ro`;
+  }
+
+  productionConfig += `
 
   backend:
     build:
@@ -126,7 +175,17 @@ ${backendEnvConfig}
       - "${settings.backendPort}:3001"
     networks:
       - monobank-network
-    restart: unless-stopped
+    restart: unless-stopped`;
+  
+  // Додаємо томи для SSL-сертифікатів, якщо використовується HTTPS
+  if (settings.useHttps && settings.sslCertPath && settings.sslKeyPath) {
+    productionConfig += `
+    volumes:
+      - ${settings.sslCertPath}:/app/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/app/ssl/server.key:ro`;
+  }
+  
+  productionConfig += `
 
 networks:
   monobank-network:
@@ -144,8 +203,18 @@ networks:
       args:
 ${frontendBuildArgs}
     container_name: monobank-donate-frontend
-    ports:
-      - "${settings.frontendPort}:80"
+    ports:`;
+  
+  if (settings.useHttps) {
+    devConfig += `
+      - "${settings.frontendPort}:443"
+      - "80:80"`;
+  } else {
+    devConfig += `
+      - "${settings.frontendPort}:80"`;
+  }
+  
+  devConfig += `
     depends_on:
       - backend
     networks:
@@ -166,8 +235,21 @@ ${frontendBuildArgs}
     }
   }
   
-  // Додаємо том для frontend, якщо потрібно
-  if (settings.useVolumeForFrontend) {
+  // Додаємо томи
+  if (settings.useHttps && settings.sslCertPath && settings.sslKeyPath) {
+    if (settings.useVolumeForFrontend) {
+      devConfig += `
+    volumes:
+      - ./frontend:/app/frontend-src:ro
+      - ${settings.sslCertPath}:/etc/nginx/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/etc/nginx/ssl/server.key:ro`;
+    } else {
+      devConfig += `
+    volumes:
+      - ${settings.sslCertPath}:/etc/nginx/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/etc/nginx/ssl/server.key:ro`;
+    }
+  } else if (settings.useVolumeForFrontend) {
     devConfig += `
     volumes:
       - ./frontend:/app/frontend-src:ro`;
@@ -187,8 +269,21 @@ ${backendDevEnvConfig}
     networks:
       - monobank-network`;
   
-  // Додаємо том для backend, якщо потрібно
-  if (settings.useVolumeForBackend) {
+  // Додаємо томи для backend
+  if (settings.useHttps && settings.sslCertPath && settings.sslKeyPath) {
+    if (settings.useVolumeForBackend) {
+      devConfig += `
+    volumes:
+      - ./backend:/app/backend-src:ro
+      - ${settings.sslCertPath}:/app/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/app/ssl/server.key:ro`;
+    } else {
+      devConfig += `
+    volumes:
+      - ${settings.sslCertPath}:/app/ssl/server.crt:ro
+      - ${settings.sslKeyPath}:/app/ssl/server.key:ro`;
+    }
+  } else if (settings.useVolumeForBackend) {
     devConfig += `
     volumes:
       - ./backend:/app/backend-src:ro`;
@@ -203,7 +298,11 @@ networks:
   fs.writeFileSync(path.join(rootDir, 'docker-compose.dev.yml'), devConfig);
   log.success('Файл docker-compose.dev.yml оновлено');
   
-  // Виводимо додаткову інформацію про змінні Vite
+  // Виводимо додаткову інформацію
+  if (settings.useHttps) {
+    log.info(`Налаштовано Docker Compose для використання HTTPS на домені ${settings.domain || 'localhost'}`);
+  }
+  
   log.info('Важливо: Змінні Vite (з префіксом VITE_) передані як аргументи збірки для правильної інтеграції у фронтенд.');
   
   return true;

@@ -228,15 +228,19 @@ async function startDevelopment(rl, showMainMenu) {
     
     // Використовуємо функцію для генерації docker-compose файлів
     await generateDockerComposeFiles({
-      frontendPort: '80',
+      frontendPort,
       backendPort: '3001',
       useVolumeForFrontend: true,
-      useVolumeForBackend: true
+      useVolumeForBackend: true,
+      useHttps: httpsConfig.useHttps,
+      domain: httpsConfig.domain,
+      sslCertPath: httpsConfig.sslCertPath,
+      sslKeyPath: httpsConfig.sslKeyPath
     });
   }
   
   // Перевіряємо доступність портів
-  const portsAvailable = await checkPortsAvailability('80', '3001', rl);
+  const portsAvailable = await checkPortsAvailability(frontendPort, '3001', rl);
   if (!portsAvailable) {
     await waitForEnter();
     showMainMenu();
@@ -264,7 +268,14 @@ async function startDevelopment(rl, showMainMenu) {
   const child = runDockerCompose(command, true);
   
   log.success('Проект запущено у режимі розробки!');
-  displayServiceUrls('80', '3001');
+  displayServiceUrls(frontendPort, '3001', httpsConfig.useHttps);
+  
+  // Якщо використовується HTTPS, виводимо додаткову інформацію
+  if (httpsConfig.useHttps) {
+    log.info('Використовується HTTPS з самопідписаними сертифікатами.');
+    log.info('При першому відвідуванні сайту браузер покаже попередження про небезпеку.');
+    log.info('Ви можете безпечно продовжити відвідування сайту, прийнявши ризик (це тестовий сервер).');
+  }
   
   await waitForEnter();
   showMainMenu();
@@ -292,15 +303,19 @@ async function startProduction(rl, showMainMenu) {
     
     // Використовуємо функцію для генерації docker-compose файлів
     await generateDockerComposeFiles({
-      frontendPort: '80',
+      frontendPort,
       backendPort: '3001',
       useVolumeForFrontend: false,
-      useVolumeForBackend: false
+      useVolumeForBackend: false,
+      useHttps: httpsConfig.useHttps,
+      domain: httpsConfig.domain,
+      sslCertPath: httpsConfig.sslCertPath,
+      sslKeyPath: httpsConfig.sslKeyPath
     });
   }
   
   // Перевіряємо доступність портів
-  const portsAvailable = await checkPortsAvailability('80', '3001', rl);
+  const portsAvailable = await checkPortsAvailability(frontendPort, '3001', rl);
   if (!portsAvailable) {
     await waitForEnter();
     showMainMenu();
@@ -328,7 +343,14 @@ async function startProduction(rl, showMainMenu) {
   const child = runDockerCompose(command, true);
   
   log.success('Проект запущено у продакшн режимі!');
-  displayServiceUrls('80', '3001');
+  displayServiceUrls(frontendPort, '3001', httpsConfig.useHttps);
+  
+  // Якщо використовується HTTPS, виводимо додаткову інформацію
+  if (httpsConfig.useHttps) {
+    log.info('Використовується HTTPS з самопідписаними сертифікатами.');
+    log.info('При першому відвідуванні сайту браузер покаже попередження про небезпеку.');
+    log.info('Ви можете безпечно продовжити відвідування сайту, прийнявши ризик (це тестовий сервер).');
+  }
   
   await waitForEnter();
   showMainMenu();

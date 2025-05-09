@@ -58,6 +58,10 @@ const {
   startLocal
 } = require('./local/combined');
 
+const {
+  setupHttps
+} = require('./https/index');
+
 const { colors, log } = require('./utils/colors');
 const { checkRequirements } = require('./utils/command-runner');
 
@@ -88,33 +92,34 @@ async function showMainMenu() {
   console.log(`${colors.green}2.${colors.reset} Повне налаштування проекту (крок за кроком)`);
   console.log(`${colors.green}3.${colors.reset} Налаштувати змінні середовища (.env файли)`);
   console.log(`${colors.green}4.${colors.reset} Генерувати .dockerignore`);
+  console.log(`${colors.green}5.${colors.reset} Налаштувати HTTPS`);
   
   // 2. Локальний запуск
   displaySubSectionTitle('Локальний запуск');
-  console.log(`${colors.green}5.${colors.reset} Запустити frontend локально`);
-  console.log(`${colors.green}6.${colors.reset} Запустити backend локально`);
-  console.log(`${colors.green}7.${colors.reset} Запустити frontend + backend локально`);
+  console.log(`${colors.green}6.${colors.reset} Запустити frontend локально`);
+  console.log(`${colors.green}7.${colors.reset} Запустити backend локально`);
+  console.log(`${colors.green}8.${colors.reset} Запустити frontend + backend локально`);
   
   // 3. Docker керування
   displaySubSectionTitle('Docker керування');
-  console.log(`${colors.green}8.${colors.reset} Запустити через Docker (розробка)`);
-  console.log(`${colors.green}9.${colors.reset} Запустити через Docker (продакшн)`);
-  console.log(`${colors.green}10.${colors.reset} Зупинити Docker контейнери`);
-  console.log(`${colors.green}11.${colors.reset} Статус Docker контейнерів`);
-  console.log(`${colors.green}12.${colors.reset} Показати логи Docker`);
-  console.log(`${colors.green}13.${colors.reset} Перебудувати Docker образи`);
+  console.log(`${colors.green}9.${colors.reset} Запустити через Docker (розробка)`);
+  console.log(`${colors.green}10.${colors.reset} Запустити через Docker (продакшн)`);
+  console.log(`${colors.green}11.${colors.reset} Зупинити Docker контейнери`);
+  console.log(`${colors.green}12.${colors.reset} Статус Docker контейнерів`);
+  console.log(`${colors.green}13.${colors.reset} Показати логи Docker`);
+  console.log(`${colors.green}14.${colors.reset} Перебудувати Docker образи`);
   
   // 4. Резервне копіювання
   displaySubSectionTitle('Резервне копіювання');
-  console.log(`${colors.green}14.${colors.reset} Зробити резервну копію конфігурації`);
-  console.log(`${colors.green}15.${colors.reset} Відновити з резервної копії`);
+  console.log(`${colors.green}15.${colors.reset} Зробити резервну копію конфігурації`);
+  console.log(`${colors.green}16.${colors.reset} Відновити з резервної копії`);
   
   // 5. Вихід
   displaySubSectionTitle('Інше');
   console.log(`${colors.green}0.${colors.reset} Вихід\n`);
   
   // Запит вибору пункту меню
-  const choice = await askForNumber('Виберіть опцію', 0, 15);
+  const choice = await askForNumber('Виберіть опцію', 0, 16);
   
   // Обробка вибору
   switch (choice) {
@@ -134,40 +139,43 @@ async function showMainMenu() {
     case 4:
       await checkDockerIgnore(rl, showMainMenu);
       break;
+    case 5:
+      await setupHttps(rl, showMainMenu);
+      break;
       
     // Локальний запуск
-    case 5:
+    case 6:
       await startFrontend(rl, showMainMenu);
       break;
-    case 6:
+    case 7:
       await startBackend(rl, showMainMenu);
       break;
-    case 7:
+    case 8:
       await startLocal(rl, showMainMenu);
       break;
       
     // Docker керування
-    case 8:
+    case 9:
       await startDevelopment(rl, showMainMenu);
       break;
-    case 9:
+    case 10:
       await startProduction(rl, showMainMenu);
       break;
-    case 10:
+    case 11:
       await stopContainers(rl, showMainMenu);
       break;
-    case 11:
+    case 12:
       await showContainerStatus(rl, showMainMenu);
       break;
-    case 12:
+    case 13:
       await showLogs(rl, showMainMenu);
       break;
-    case 13:
+    case 14:
       await rebuildProject(rl, showMainMenu);
       break;
       
     // Резервне копіювання
-    case 14:
+    case 15:
       const backupPath = createBackup('manual');
       if (backupPath) {
         log.success(`Резервну копію створено: ${backupPath}`);
@@ -177,7 +185,7 @@ async function showMainMenu() {
       await waitForEnter();
       showMainMenu();
       break;
-    case 15:
+    case 16:
       await restoreFromBackup(rl, showMainMenu);
       break;
       

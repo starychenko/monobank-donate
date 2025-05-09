@@ -11,6 +11,7 @@ const fs = require('fs');
 const rootDir = path.join(__dirname, '../..');
 const frontendDir = path.join(rootDir, 'frontend');
 const backendDir = path.join(rootDir, 'backend');
+const sslDir = path.join(rootDir, 'ssl');
 
 /**
  * Виконує команду у вказаній директорії
@@ -51,6 +52,42 @@ function runDockerCompose(command, detached = false) {
   });
   
   return child;
+}
+
+/**
+ * Перевіряє наявність SSL-сертифікатів
+ * @returns {Object} - Результат перевірки та шляхи до сертифікатів
+ */
+function checkSslCertificates() {
+  try {
+    if (!fs.existsSync(sslDir)) {
+      return { 
+        exists: false, 
+        message: 'Директорія SSL-сертифікатів не знайдена'
+      };
+    }
+    
+    const keyPath = path.join(sslDir, 'server.key');
+    const certPath = path.join(sslDir, 'server.crt');
+    
+    if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+      return { 
+        exists: false, 
+        message: 'SSL-сертифікати не знайдено. Спершу налаштуйте HTTPS через головне меню.'
+      };
+    }
+    
+    return {
+      exists: true,
+      keyPath,
+      certPath
+    };
+  } catch (error) {
+    return {
+      exists: false,
+      message: `Помилка при перевірці SSL-сертифікатів: ${error.message}`
+    };
+  }
 }
 
 /**
@@ -137,10 +174,12 @@ async function checkRequirements() {
 module.exports = {
   runCommand,
   runDockerCompose,
+  checkSslCertificates,
   checkDocker,
   checkDockerCompose,
   checkRequirements,
   rootDir,
   frontendDir,
-  backendDir
+  backendDir,
+  sslDir
 }; 

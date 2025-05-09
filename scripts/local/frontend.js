@@ -3,11 +3,14 @@
  */
 
 const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const { colors, log } = require('../utils/colors');
-const { frontendDir } = require('../utils/command-runner');
-const { waitForEnter } = require('../ui/prompts');
+const { frontendDir, checkSslCertificates } = require('../utils/command-runner');
+const { waitForEnter, askYesNo } = require('../ui/prompts');
 const { checkFrontendDependencies } = require('../utils/dependency-checker');
 const { checkEnvFiles } = require('../config/env-manager');
+const { parseEnvFile } = require('../utils/fs-helpers');
 
 /**
  * Запускає frontend локально
@@ -39,14 +42,40 @@ async function startFrontend(rl, showMainMenu) {
     return;
   }
   
+  // Перевіряємо налаштування HTTPS
+  const envFilePath = path.join(frontendDir, '.env');
+  const envVars = parseEnvFile(envFilePath);
+  const useHttps = envVars.VITE_USE_HTTPS === 'true';
+  
   try {
-    const child = spawn('npm', ['run', 'dev'], { 
+    let npmCommand = 'run dev';
+    
+    // Якщо використовується HTTPS, перевіряємо наявність сертифікатів
+    if (useHttps) {
+      log.info('Виявлено налаштування HTTPS...');
+      
+      const sslCheck = checkSslCertificates();
+      if (!sslCheck.exists) {
+        log.warning(sslCheck.message);
+        log.warning('Фронтенд буде запущено без HTTPS.');
+      } else {
+        log.success('Знайдено SSL-сертифікати. Використовуємо HTTPS.');
+        
+        // HTTPS configuration is handled by Vite config
+        log.info('Запуск з підтримкою HTTPS через Vite...');
+      }
+    }
+    
+    const child = spawn('npm', npmCommand.split(' '), { 
       cwd: frontendDir,
       stdio: 'inherit',
       shell: true
     });
     
-    log.success('Фронтенд запущено! Натисніть Ctrl+C для зупинки.');
+    const protocol = useHttps ? 'https' : 'http';
+    const domain = envVars.VITE_DOMAIN || 'localhost';
+    log.success(`Фронтенд запущено! Доступний за адресою: ${protocol}://${domain}:5173`);
+    log.info('Натисніть Ctrl+C для зупинки.');
     
     child.on('close', (code) => {
       if (code !== null) {

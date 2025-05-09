@@ -208,6 +208,41 @@ async function configureEnvFiles(rl, showMainMenu, createBackup) {
       'VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL'
     );
     
+    // Налаштування HTTPS
+    console.log(`\n${colors.cyan}Налаштування HTTPS:${colors.reset}`);
+    
+    const useHttps = await new Promise((resolve) => {
+      rl.question(`${colors.yellow}Використовувати HTTPS? (y/n) ${colors.reset}`, answer => {
+        const value = answer.trim().toLowerCase() === 'y';
+        if (updateEnvValue(frontendEnvPath, 'VITE_USE_HTTPS', value ? 'true' : 'false')) {
+          log.success(`Встановлено VITE_USE_HTTPS=${value ? 'true' : 'false'}`);
+        }
+        resolve(value);
+      });
+    });
+    
+    if (useHttps) {
+      const domain = await askAndSetValue(
+        rl,
+        'Введіть домен для HTTPS',
+        'localhost',
+        frontendEnvPath,
+        'VITE_DOMAIN'
+      );
+      
+      // Оновлюємо URL API з урахуванням HTTPS
+      await askAndSetValue(
+        rl,
+        'URL для API бекенду з HTTPS',
+        `https://${domain}:3001/api/parse-monobank`,
+        frontendEnvPath,
+        'VITE_API_URL'
+      );
+      
+      log.info('Для завершення налаштування HTTPS необхідно згенерувати SSL-сертифікати');
+      log.info('Використайте пункт меню "5. Налаштувати HTTPS" для генерації сертифікатів і повної конфігурації');
+    }
+    
     // Додаткові налаштування для frontend, якщо вони є в .env.example
     const frontendEnvExample = fs.existsSync(path.join(frontendDir, '.env.example')) 
       ? fs.readFileSync(path.join(frontendDir, '.env.example'), 'utf8') 
@@ -275,6 +310,43 @@ async function configureEnvFiles(rl, showMainMenu, createBackup) {
       backendEnvPath,
       'ALLOWED_ORIGINS'
     );
+    
+    // Налаштування HTTPS для бекенду
+    console.log(`\n${colors.cyan}Налаштування HTTPS для бекенду:${colors.reset}`);
+    
+    const backendUseHttps = await new Promise((resolve) => {
+      rl.question(`${colors.yellow}Використовувати HTTPS для бекенду? (y/n) ${colors.reset}`, answer => {
+        const value = answer.trim().toLowerCase() === 'y';
+        if (updateEnvValue(backendEnvPath, 'USE_HTTPS', value ? 'true' : 'false')) {
+          log.success(`Встановлено USE_HTTPS=${value ? 'true' : 'false'}`);
+        }
+        resolve(value);
+      });
+    });
+    
+    if (backendUseHttps) {
+      const backendDomain = await askAndSetValue(
+        rl,
+        'Введіть домен для бекенду',
+        'localhost',
+        backendEnvPath,
+        'DOMAIN'
+      );
+      
+      // Інформація про SSL сертифікати
+      log.info('Примітка: Для роботи HTTPS потрібні SSL-сертифікати.');
+      log.info('Після завершення налаштування .env, використайте пункт меню "5. Налаштувати HTTPS"');
+      log.info('для генерації SSL-сертифікатів і правильного налаштування шляхів до них.');
+      
+      // Оновлюємо CORS для підтримки HTTPS
+      const allowedOrigins = await askAndSetValue(
+        rl,
+        'Дозволені CORS домени для HTTPS (через кому)',
+        `https://${backendDomain},https://${backendDomain}:443,https://localhost,https://localhost:443,https://localhost:5173`,
+        backendEnvPath,
+        'ALLOWED_ORIGINS'
+      );
+    }
     
     await askAndSetValue(
       rl,
@@ -448,12 +520,15 @@ async function configureEnvFiles(rl, showMainMenu, createBackup) {
 /**
  * Перевіряє наявність і коректність .env файлів
  * @param {string} component - Компонент для перевірки ('frontend', 'backend' або 'all')
+ * @param {boolean} checkHttps - Чи перевіряти наявність налаштувань HTTPS
  * @returns {boolean} - Чи налаштовані всі необхідні env-файли
  */
-function checkEnvFiles(component = 'all') {
+function checkEnvFiles(component = 'all', checkHttps = false) {
   const results = {
     frontend: false,
-    backend: false
+    backend: false,
+    frontendHttps: false,
+    backendHttps: false
   };
   
   // Перевіряємо frontend .env
@@ -464,6 +539,17 @@ function checkEnvFiles(component = 'all') {
       // Перевіряємо наявність мінімально необхідних змінних
       if (envContent.includes('VITE_MONOBANK_JAR_URL=')) {
         results.frontend = true;
+        
+        // Перевіряємо налаштування HTTPS, якщо потрібно
+        if (checkHttps) {
+          if (envContent.includes('VITE_USE_HTTPS=true') && 
+              envContent.includes('VITE_DOMAIN=') &&
+              envContent.includes('VITE_API_URL=https://')) {
+            results.frontendHttps = true;
+          } else {
+            log.warning('Frontend .env файл не містить налаштувань HTTPS або вони неповні');
+          }
+        }
       } else {
         log.warning('Frontend .env файл існує, але не містить необхідних змінних');
       }
@@ -480,6 +566,17 @@ function checkEnvFiles(component = 'all') {
       // Перевіряємо наявність мінімально необхідних змінних
       if (envContent.includes('DEFAULT_JAR_URL=')) {
         results.backend = true;
+        
+        // Перевіряємо налаштування HTTPS, якщо потрібно
+        if (checkHttps) {
+          if (envContent.includes('USE_HTTPS=true') && 
+              envContent.includes('DOMAIN=') &&
+              envContent.includes('ALLOWED_ORIGINS=https://')) {
+            results.backendHttps = true;
+          } else {
+            log.warning('Backend .env файл не містить налаштувань HTTPS або вони неповні');
+          }
+        }
       } else {
         log.warning('Backend .env файл існує, але не містить необхідних змінних');
       }
@@ -488,13 +585,17 @@ function checkEnvFiles(component = 'all') {
     }
   }
   
-  // Повертаємо результат в залежності від параметра component
+  // Повертаємо результат в залежності від параметра component і checkHttps
   if (component === 'frontend') {
-    return results.frontend;
+    return checkHttps ? results.frontend && results.frontendHttps : results.frontend;
   } else if (component === 'backend') {
-    return results.backend;
+    return checkHttps ? results.backend && results.backendHttps : results.backend;
   } else {
-    return results.frontend && results.backend;
+    if (checkHttps) {
+      return results.frontend && results.backend && results.frontendHttps && results.backendHttps;
+    } else {
+      return results.frontend && results.backend;
+    }
   }
 }
 

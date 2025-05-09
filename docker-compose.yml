@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        - VITE_API_URL=http://localhost:3001/api/parse-monobank
+        - VITE_API_URL=https://localhost:3001/api/parse-monobank
+        - VITE_USE_HTTPS=true
+        - VITE_DOMAIN=localhost
         - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
         - VITE_UPDATE_INTERVAL=15000
         - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=1
@@ -13,6 +15,7 @@ services:
         - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
     container_name: monobank-donate-frontend
     ports:
+      - "443:443"
       - "80:80"
     depends_on:
       - backend
@@ -28,6 +31,9 @@ services:
       - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1
       - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
 
+    volumes:
+      - C:\GIT\monobank-donate\ssl\server.crt:/etc/nginx/ssl/server.crt:ro
+      - C:\GIT\monobank-donate\ssl\server.key:/etc/nginx/ssl/server.key:ro
 
   backend:
     build:
@@ -36,7 +42,10 @@ services:
     container_name: monobank-donate-backend
     environment:
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=http://localhost,http://localhost:80
+      - USE_HTTPS=true
+      - SSL_KEY_PATH=/app/ssl/server.key
+      - SSL_CERT_PATH=/app/ssl/server.crt
+      - ALLOWED_ORIGINS=https://localhost,https://localhost:443
       - DEFAULT_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
       - CACHE_TTL=15
       - RATE_LIMIT_GLOBAL_MAX=1000
@@ -50,12 +59,16 @@ services:
       - RETRY_INITIAL_DELAY=1000
       - SCREENSHOTS_ENABLED=true
       - SCREENSHOTS_PATH=monobank-error.png
+      - DOMAIN=localhost
 
     ports:
       - "3001:3001"
     networks:
       - monobank-network
     restart: unless-stopped
+    volumes:
+      - C:\GIT\monobank-donate\ssl\server.crt:/app/ssl/server.crt:ro
+      - C:\GIT\monobank-donate\ssl\server.key:/app/ssl/server.key:ro
 
 networks:
   monobank-network:

@@ -8,7 +8,8 @@ RUN apk add --no-cache \
     freetype-dev \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    openssl
 
 # Налаштування змінних середовища для Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -28,13 +29,21 @@ COPY backend/ ./
 # Створюємо .env файл, якщо його немає
 RUN touch .env
 
-# Додаємо налаштування CORS
-ENV ALLOWED_ORIGINS=http://localhost,http://frontend,http://localhost:5173,http://frontend:80
+# Створюємо директорію для SSL сертифікатів
+RUN mkdir -p /app/ssl
+
+# Додаємо налаштування CORS і HTTPS
+ENV ALLOWED_ORIGINS=http://localhost,https://localhost,http://frontend,https://frontend,http://localhost:5173,https://localhost:5173,http://frontend:80,https://frontend:443
+
+# Змінні середовища для HTTPS
+ENV USE_HTTPS=false \
+    DOMAIN=localhost
 
 # Будуємо проект
 RUN npm run build
 
-EXPOSE 3001
+# Експонуємо порти
+EXPOSE 3001 80
 
 # Запускаємо сервер
 CMD ["node", "dist/index.js"] 

@@ -3,11 +3,14 @@
  */
 
 const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const { colors, log } = require('../utils/colors');
-const { frontendDir, backendDir } = require('../utils/command-runner');
+const { frontendDir, backendDir, checkSslCertificates } = require('../utils/command-runner');
 const { waitForEnter } = require('../ui/prompts');
 const { checkFrontendDependencies, checkBackendDependencies } = require('../utils/dependency-checker');
 const { checkEnvFiles } = require('../config/env-manager');
+const { parseEnvFile } = require('../utils/fs-helpers');
 
 /**
  * Запускає frontend та backend локально
@@ -62,15 +65,49 @@ async function startLocal(rl, showMainMenu) {
     return;
   }
   
+  // Перевіряємо налаштування HTTPS
+  const backendEnvPath = path.join(backendDir, '.env');
+  const frontendEnvPath = path.join(frontendDir, '.env');
+  const backendEnvVars = parseEnvFile(backendEnvPath);
+  const frontendEnvVars = parseEnvFile(frontendEnvPath);
+  
+  const useHttps = backendEnvVars.USE_HTTPS === 'true' || frontendEnvVars.VITE_USE_HTTPS === 'true';
+  const domain = backendEnvVars.DOMAIN || frontendEnvVars.VITE_DOMAIN || 'localhost';
+  
   try {
+    // Модифікуємо змінні середовища для включення HTTPS, якщо потрібно
+    const env = { ...process.env };
+    
+    if (useHttps) {
+      log.info('Виявлено налаштування HTTPS...');
+      
+      const sslCheck = checkSslCertificates();
+      if (!sslCheck.exists) {
+        log.warning(sslCheck.message);
+        log.warning('Проект буде запущено без HTTPS.');
+        
+        // Вимикаємо HTTPS, якщо немає сертифікатів
+        env.USE_HTTPS = 'false';
+      } else {
+        log.success('Знайдено SSL-сертифікати. Використовуємо HTTPS.');
+        env.USE_HTTPS = 'true';
+        env.SSL_KEY_PATH = sslCheck.keyPath;
+        env.SSL_CERT_PATH = sslCheck.certPath;
+        env.DOMAIN = domain;
+      }
+    }
+    
     // Запускаємо backend
     log.info('Запуск backend...');
     const backendChild = spawn('npm', ['run', 'dev'], { 
       cwd: backendDir,
       stdio: 'inherit',
       detached: true,
-      shell: true
+      shell: true,
+      env
     });
+    
+    const protocol = (useHttps && checkSslCertificates().exists) ? 'https' : 'http';
     
     // Зачекаємо трохи, щоб backend встиг запуститися
     setTimeout(() => {
@@ -78,11 +115,14 @@ async function startLocal(rl, showMainMenu) {
       const frontendChild = spawn('npm', ['run', 'dev'], { 
         cwd: frontendDir,
         stdio: 'inherit',
-        shell: true
+        shell: true,
+        env
       });
       
       log.success('Проект запущено локально!');
-      log.success('Натисніть Ctrl+C для зупинки всіх процесів.');
+      log.success(`Frontend: ${protocol}://${domain}:5173`);
+      log.success(`Backend: ${protocol}://${domain}:3001`);
+      log.info('Натисніть Ctrl+C для зупинки всіх процесів.');
       
       frontendChild.on('close', (code) => {
         if (code !== null) {
