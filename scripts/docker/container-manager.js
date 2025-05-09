@@ -46,15 +46,53 @@ function checkProjectReadiness() {
 }
 
 /**
+ * Перевіряє порт через Node.js
+ * @param {number} port - Порт для перевірки
+ * @returns {Promise<boolean>} - true, якщо порт вільний
+ */
+function checkPortDirectly(port) {
+  return new Promise(resolve => {
+    const net = require('net');
+    const server = net.createServer();
+    
+    server.once('error', err => {
+      if (err.code === 'EADDRINUSE') {
+        // Порт використовується
+        resolve(false);
+      } else {
+        // Інша помилка, вважаємо що порт вільний
+        resolve(true);
+      }
+      server.close();
+    });
+    
+    server.once('listening', () => {
+      // Порт доступний, закриваємо сервер
+      server.close();
+      resolve(true);
+    });
+    
+    // Спробуємо прослухати порт
+    server.listen(port);
+  });
+}
+
+/**
  * Перевіряє, чи порт вільний
  * @param {string} port - Номер порту для перевірки
  * @returns {boolean} - true, якщо порт вільний, false - якщо зайнятий
  */
 function isPortAvailable(port) {
+  const portNum = parseInt(port, 10);
+  if (isNaN(portNum)) {
+    log.error(`Некоректний номер порту: ${port}`);
+    return false;
+  }
+  
   try {
-    // Використовуємо більш надійний спосіб перевірки для Windows
+    // Використовуємо різні способи перевірки в залежності від ОС
     if (process.platform === 'win32') {
-      // Додаємо опцію -n, щоб показати числові адреси замість імен для уникнення проблем з перекладом
+      // Для Windows використовуємо netstat
       const result = execSync(`netstat -ano -n | findstr :${port} | findstr LISTENING`, { 
         encoding: 'utf8', 
         stdio: ['pipe', 'pipe', 'ignore'] 
@@ -63,16 +101,122 @@ function isPortAvailable(port) {
       // Якщо результат не порожній, порт зайнятий
       return result.trim() === '';
     } else {
-      // Для Unix-подібних систем
-      const result = execSync(`netstat -tuln | grep :${port}`, { 
+      // Для Linux пробуємо різні команди
+      try {
+        // 1. Спробуємо netstat (може бути відсутній в деяких дистрибутивах)
+        const result = execSync(`netstat -tuln | grep :${port}`, { 
+          encoding: 'utf8', 
+          stdio: ['pipe', 'pipe', 'ignore'] 
+        });
+        return result.trim() === '';
+      } catch (netstatError) {
+        try {
+          // 2. Спробуємо ss (Socket Statistics) - є в більшості сучасних дистрибутивів
+          const result = execSync(`ss -tuln | grep :${port}`, { 
+            encoding: 'utf8', 
+            stdio: ['pipe', 'pipe', 'ignore'] 
+          });
+          return result.trim() === '';
+        } catch (ssError) {
+          try {
+            // 3. Спробуємо lsof (якщо встановлено)
+            const result = execSync(`lsof -i :${port} -P -n`, { 
+              encoding: 'utf8', 
+              stdio: ['pipe', 'pipe', 'ignore'] 
+            });
+            return result.trim() === '';
+          } catch (lsofError) {
+            // 4. Якщо жодна з команд не працює, використовуємо синхронну версію
+            log.warning(`Не знайдено утиліт для перевірки порту. Перевіряємо через пряме підключення.`);
+            
+            // Використовуємо синхронний запит через curl або wget
+            try {
+              execSync(`curl -s localhost:${port} -o /dev/null`, { stdio: 'ignore' });
+              // Якщо команда успішно виконалась, то порт зайнятий
+              return false;
+            } catch (curlError) {
+              try {
+                execSync(`wget -q -O /dev/null localhost:${port}`, { stdio: 'ignore' });
+                // Якщо команда успішно виконалась, то порт зайнятий
+                return false;
+              } catch (wgetError) {
+                // Якщо обидві команди не змогли підключитися, то порт вільний
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // Якщо сталася непередбачена помилка, виводимо попередження і вважаємо, що порт вільний
+    log.warning(`Помилка при перевірці порту ${port}: ${error.message}`);
+    return true;
+  }
+}
+
+// Створюємо асинхронну версію для використання в майбутньому
+/**
+ * Асинхронно перевіряє, чи порт вільний
+ * @param {string} port - Номер порту для перевірки
+ * @returns {Promise<boolean>} - true, якщо порт вільний, false - якщо зайнятий
+ */
+async function isPortAvailableAsync(port) {
+  const portNum = parseInt(port, 10);
+  if (isNaN(portNum)) {
+    log.error(`Некоректний номер порту: ${port}`);
+    return false;
+  }
+  
+  try {
+    // Використовуємо різні способи перевірки в залежності від ОС
+    if (process.platform === 'win32') {
+      // Для Windows використовуємо netstat
+      const result = execSync(`netstat -ano -n | findstr :${port} | findstr LISTENING`, { 
         encoding: 'utf8', 
         stdio: ['pipe', 'pipe', 'ignore'] 
       });
+      
+      // Якщо результат не порожній, порт зайнятий
       return result.trim() === '';
+    } else {
+      // Для Linux пробуємо різні команди
+      try {
+        // 1. Спробуємо netstat (може бути відсутній в деяких дистрибутивах)
+        const result = execSync(`netstat -tuln | grep :${port}`, { 
+          encoding: 'utf8', 
+          stdio: ['pipe', 'pipe', 'ignore'] 
+        });
+        return result.trim() === '';
+      } catch (netstatError) {
+        try {
+          // 2. Спробуємо ss (Socket Statistics) - є в більшості сучасних дистрибутивів
+          const result = execSync(`ss -tuln | grep :${port}`, { 
+            encoding: 'utf8', 
+            stdio: ['pipe', 'pipe', 'ignore'] 
+          });
+          return result.trim() === '';
+        } catch (ssError) {
+          try {
+            // 3. Спробуємо lsof (якщо встановлено)
+            const result = execSync(`lsof -i :${port} -P -n`, { 
+              encoding: 'utf8', 
+              stdio: ['pipe', 'pipe', 'ignore'] 
+            });
+            return result.trim() === '';
+          } catch (lsofError) {
+            // 4. Прямий метод через Node.js
+            log.warning(`Не знайдено утиліт для перевірки порту. Використовуємо Node.js метод.`);
+            return await checkPortDirectly(portNum);
+          }
+        }
+      }
     }
   } catch (error) {
-    // Якщо команда завершилась з помилкою, ймовірно порт вільний
-    return true;
+    // Якщо сталася непередбачена помилка, виводимо попередження і вважаємо, що порт вільний
+    log.warning(`Помилка при асинхронній перевірці порту ${port}: ${error.message}`);
+    // У випадку помилки, спробуємо прямий метод
+    return await checkPortDirectly(portNum);
   }
 }
 
@@ -101,10 +245,58 @@ function getProcessUsingPort(port) {
       }
       return null;
     } else {
-      const result = execSync(`lsof -i :${port} -P -n -t`, { encoding: 'utf8' });
-      return result.trim() || null;
+      // На Linux пробуємо різні методи в порядку спадання надійності
+      try {
+        // Метод 1: lsof (найкращий, але може бути не встановлений)
+        const result = execSync(`lsof -i :${port} -P -n -t`, { encoding: 'utf8' });
+        return result.trim() || null;
+      } catch (lsofError) {
+        try {
+          // Метод 2: ss (є в більшості сучасних дистрибутивів)
+          const result = execSync(`ss -tulpn | grep :${port} | grep LISTEN`, { encoding: 'utf8' });
+          
+          if (result.trim()) {
+            // Формат: "users:(("nginx",pid=12345,fd=5))"
+            const match = result.match(/pid=(\d+)/);
+            if (match && match[1]) {
+              return match[1];
+            }
+          }
+          
+          // Якщо ss не знайшов PID або формат виводу інший
+          try {
+            // Метод 3: fuser (ще один варіант, доступний на багатьох системах)
+            const result = execSync(`fuser ${port}/tcp 2>/dev/null`, { encoding: 'utf8' });
+            return result.trim().split(':')[1].trim() || null;
+          } catch (fuserError) {
+            try {
+              // Метод 4: netstat (старий, але може бути доступний)
+              const result = execSync(`netstat -tulnp 2>/dev/null | grep :${port} | grep LISTEN`, { encoding: 'utf8' });
+              
+              if (result.trim()) {
+                // Формат: "tcp 0 0 0.0.0.0:3001 0.0.0.0:* LISTEN 12345/node"
+                const match = result.match(/LISTEN\s+(\d+)/);
+                if (match && match[1]) {
+                  return match[1];
+                }
+              }
+              
+              return null;
+            } catch (netstatError) {
+              // Якщо жоден метод не спрацював
+              log.warning('Не знайдено утиліт для ідентифікації процесу (lsof, ss, fuser, netstat)');
+              return null;
+            }
+          }
+        } catch (ssError) {
+          // Продовжуємо до наступного методу
+          log.warning('Не знайдено утиліт ss або lsof. Спробуйте встановити їх для кращої роботи: sudo apt install lsof');
+          return null;
+        }
+      }
     }
   } catch (error) {
+    log.warning(`Помилка при отриманні PID процесу: ${error.message}`);
     return null;
   }
 }
@@ -115,16 +307,38 @@ function getProcessUsingPort(port) {
  * @returns {string} - Назва процесу
  */
 function getProcessNameByPid(pid) {
+  if (!pid) return 'Невідомий процес';
+  
   try {
     if (process.platform === 'win32') {
       const result = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, { encoding: 'utf8' });
       const match = result.match(/"([^"]+)"/);
       return match ? match[1] : 'Невідомий процес';
     } else {
-      const result = execSync(`ps -p ${pid} -o comm=`, { encoding: 'utf8' });
-      return result.trim() || 'Невідомий процес';
+      // Для Linux пробуємо різні команди в порядку надійності
+      try {
+        // Метод 1: ps (найбільш універсальний)
+        const result = execSync(`ps -p ${pid} -o comm=`, { encoding: 'utf8' });
+        return result.trim() || 'Невідомий процес';
+      } catch (psError) {
+        try {
+          // Метод 2: читаємо з /proc/PID/comm (не вимагає додаткових утиліт)
+          const result = execSync(`cat /proc/${pid}/comm 2>/dev/null`, { encoding: 'utf8' });
+          return result.trim() || 'Невідомий процес';
+        } catch (procError) {
+          try {
+            // Метод 3: використовуємо /proc/PID/status (складніший, але надійний)
+            const result = execSync(`grep -i "^Name:" /proc/${pid}/status 2>/dev/null`, { encoding: 'utf8' });
+            const match = result.match(/Name:\s+(.+)/i);
+            return match ? match[1].trim() : 'Невідомий процес';
+          } catch (grepError) {
+            return 'Невідомий процес';
+          }
+        }
+      }
     }
   } catch (error) {
+    log.warning(`Помилка при отриманні імені процесу: ${error.message}`);
     return 'Невідомий процес';
   }
 }
@@ -143,15 +357,27 @@ async function checkPortsAvailability(frontendPort, backendPort, rl) {
   ];
   
   for (const { name, port } of portsToCheck) {
-    if (!isPortAvailable(port)) {
+    // Перевіряємо спочатку асинхронно для більшої надійності
+    let isAvailable = false;
+    try {
+      isAvailable = await isPortAvailableAsync(port);
+    } catch (error) {
+      // Якщо асинхронна перевірка не спрацювала, використовуємо синхронну
+      log.warning(`Не вдалося асинхронно перевірити порт ${port}, використовуємо синхронну перевірку`);
+      isAvailable = isPortAvailable(port);
+    }
+    
+    if (!isAvailable) {
+      // Порт зайнятий, спробуємо отримати PID процесу
       const pid = getProcessUsingPort(port);
       const processName = pid ? getProcessNameByPid(pid) : 'невідомий процес';
       
-      log.error(`Порт ${port} (${name}) вже використовується процесом ${processName} (PID: ${pid}).`);
+      log.error(`Порт ${port} (${name}) вже використовується процесом ${processName}${pid ? ` (PID: ${pid})` : ''}.`);
       
+      // Запитуємо користувача, що робити
       const answer = await new Promise((resolve) => {
         console.log(`\n${colors.yellow}Оберіть дію:${colors.reset}`);
-        console.log(`${colors.green}1.${colors.reset} Завершити процес, що блокує порт ${port}`);
+        console.log(`${colors.green}1.${colors.reset} Завершити процес, що блокує порт ${port}${pid ? ' (PID: ' + pid + ')' : ''}`);
         console.log(`${colors.green}2.${colors.reset} Використати інший порт`);
         console.log(`${colors.green}3.${colors.reset} Скасувати запуск`);
         
@@ -163,20 +389,84 @@ async function checkPortsAvailability(frontendPort, backendPort, rl) {
       switch (answer) {
         case '1':
           if (!pid) {
-            log.error('Неможливо визначити PID процесу, що блокує порт. Спробуйте вибрати інший порт або інший варіант.');
-            return await checkPortsAvailability(frontendPort, backendPort, rl);
-          }
-          
-          try {
-            if (process.platform === 'win32') {
-              execSync(`taskkill /F /PID ${pid}`, { stdio: 'inherit' });
-            } else {
-              execSync(`kill -9 ${pid}`, { stdio: 'inherit' });
+            log.error('Неможливо визначити PID процесу, що блокує порт.');
+            
+            // Додаткова опція встановлення lsof на Linux
+            if (process.platform !== 'win32') {
+              log.info('Для кращої роботи з портами на Linux рекомендується встановити утиліти lsof та ss:');
+              log.info('   sudo apt-get update && sudo apt-get install -y lsof net-tools');
+              log.info('   або');
+              log.info('   sudo yum install -y lsof net-tools');
             }
-            log.success(`Процес з PID ${pid} успішно завершено.`);
-          } catch (error) {
-            log.error(`Не вдалося завершити процес: ${error.message}`);
-            return false;
+            
+            // Спробуємо альтернативний спосіб завершення процесу
+            const killByPort = await askYesNo(`Спробувати завершити процес на порту ${port} напряму?`);
+            
+            if (killByPort) {
+              try {
+                if (process.platform === 'win32') {
+                  // На Windows використовуємо netstat і taskkill
+                  execSync(`FOR /F "tokens=5" %P IN ('netstat -ano ^| findstr :${port} ^| findstr LISTENING') DO taskkill /F /PID %P`, 
+                    { stdio: 'inherit', shell: true });
+                } else {
+                  // На Linux спробуємо fuser або killall
+                  try {
+                    execSync(`fuser -k ${port}/tcp`, { stdio: 'inherit' });
+                  } catch (fuserError) {
+                    try {
+                      // Спробуємо знайти процес через ss або netstat і вбити його
+                      log.info('Спроба знайти і завершити процес через ss/netstat...');
+                      const findCmd = process.platform === 'darwin' ? 
+                        `lsof -i :${port} | grep LISTEN | awk '{print $2}' | xargs kill -9` : 
+                        `ss -tulpn | grep :${port} | grep LISTEN | awk '{print $7}' | cut -d'=' -f2 | cut -d',' -f1 | xargs -r kill -9`;
+                      execSync(findCmd, { stdio: 'inherit' });
+                    } catch (alternativeError) {
+                      log.error('Не вдалося завершити процес альтернативними методами.');
+                    }
+                  }
+                }
+                
+                // Перевіряємо, чи порт став доступним
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Даємо час процесу завершитися
+                const portNowAvailable = await isPortAvailableAsync(port);
+                
+                if (portNowAvailable) {
+                  log.success(`Процес на порту ${port} успішно завершено.`);
+                  continue; // Переходимо до наступного порту
+                } else {
+                  log.error(`Не вдалося звільнити порт ${port}.`);
+                  return await checkPortsAvailability(frontendPort, backendPort, rl);
+                }
+              } catch (killError) {
+                log.error(`Помилка при завершенні процесу: ${killError.message}`);
+                return false;
+              }
+            } else {
+              // Якщо користувач не хоче пробувати альтернативний спосіб
+              return await checkPortsAvailability(frontendPort, backendPort, rl);
+            }
+          } else {
+            // Якщо PID знайдено, завершуємо процес стандартним способом
+            try {
+              if (process.platform === 'win32') {
+                execSync(`taskkill /F /PID ${pid}`, { stdio: 'inherit' });
+              } else {
+                execSync(`kill -9 ${pid}`, { stdio: 'inherit' });
+              }
+              log.success(`Процес з PID ${pid} успішно завершено.`);
+              
+              // Перевіряємо, чи порт став доступним
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Даємо час процесу завершитися
+              const portNowAvailable = await isPortAvailableAsync(port);
+              
+              if (!portNowAvailable) {
+                log.warning(`Порт ${port} все ще зайнятий після завершення процесу. Перевіряємо ще раз...`);
+                return await checkPortsAvailability(frontendPort, backendPort, rl);
+              }
+            } catch (error) {
+              log.error(`Не вдалося завершити процес: ${error.message}`);
+              return false;
+            }
           }
           break;
         
@@ -197,7 +487,8 @@ async function checkPortsAvailability(frontendPort, backendPort, rl) {
           }
           
           // Перевіряємо новий порт
-          if (!isPortAvailable(newPort)) {
+          const newPortAvailable = await isPortAvailableAsync(newPort);
+          if (!newPortAvailable) {
             log.error(`Новий порт ${newPort} також зайнятий.`);
             return await checkPortsAvailability(frontendPort, backendPort, rl);
           }
@@ -646,5 +937,10 @@ module.exports = {
   stopContainers,
   showLogs,
   rebuildProject,
-  showContainerStatus
+  showContainerStatus,
+  isPortAvailable,
+  isPortAvailableAsync,
+  getProcessUsingPort,
+  getProcessNameByPid,
+  checkPortsAvailability
 }; 
