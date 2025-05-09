@@ -7,8 +7,8 @@ KEY_FILE="/etc/nginx/ssl/server.key"
 DOMAIN=${VITE_DOMAIN:-localhost}
 
 # Перевіряємо, чи використовувати HTTPS
-if [ "$VITE_USE_HTTPS" = "true" ]; then
-  echo "HTTPS конфігурація виявлена..."
+if [ "$VITE_USE_HTTPS" = "true" ] || [ -f "$CERT_FILE" ]; then
+  echo "HTTPS конфігурація виявлена для фронтенду..."
   
   # Перевіряємо, чи існують сертифікати
   if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
@@ -22,7 +22,7 @@ if [ "$VITE_USE_HTTPS" = "true" ]; then
     
     echo "Тимчасові SSL сертифікати створено."
   else
-    echo "SSL сертифікати вже існують."
+    echo "SSL сертифікати для фронтенду вже існують."
   fi
 else
   echo "HTTPS не використовується, створення SSL сертифікатів пропущено."
