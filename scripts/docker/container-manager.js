@@ -6,7 +6,7 @@ const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { colors, log } = require('../utils/colors');
-const { rootDir, runDockerCompose } = require('../utils/command-runner');
+const { rootDir, runDockerCompose, execDockerCompose, dockerComposeCommand } = require('../utils/command-runner');
 const { waitForEnter } = require('../ui/prompts');
 const { displayServiceUrls } = require('../ui/messages');
 const { generateDockerComposeFiles } = require('./compose-generator');
@@ -473,12 +473,12 @@ async function stopContainers(rl, showMainMenu) {
     
     if (devFileExists) {
       log.info('Зупиняємо контейнери для режиму розробки...');
-      execSync('docker-compose -f docker-compose.dev.yml down', { stdio: 'inherit' });
+      execDockerCompose('-f docker-compose.dev.yml down');
     }
     
     // Також зупиняємо контейнери для продакшну
     log.info('Зупиняємо контейнери для продакшн режиму...');
-    execSync('docker-compose down', { stdio: 'inherit' });
+    execDockerCompose('down');
     
     log.success('Контейнери успішно зупинені!');
   } catch (error) {
@@ -528,7 +528,7 @@ async function showLogs(rl, showMainMenu) {
   log.warning('Натисніть Ctrl+C, щоб зупинити відображення логів...');
   
   try {
-    execSync(`docker-compose ${composeFile} logs -f`, { stdio: 'inherit' });
+    execDockerCompose(`${composeFile} logs -f`);
   } catch (error) {
     // Ігноруємо помилку, яка виникає при натисканні Ctrl+C
   }
@@ -606,7 +606,7 @@ async function rebuildProject(rl, showMainMenu) {
     
     // Запускаємо збірку образів без кешу
     const composeFile = await getComposeFile();
-    execSync(`docker-compose -f ${composeFile} build --no-cache`, { stdio: 'inherit' });
+    execDockerCompose(`-f ${composeFile} build --no-cache`);
     
     log.success('Docker образи успішно перебудовано!');
     log.info('Тепер ви можете запустити проект через пункти "Запустити через Docker (розробка)" або "Запустити через Docker (продакшн)"');

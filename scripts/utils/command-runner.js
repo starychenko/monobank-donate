@@ -13,6 +13,22 @@ const frontendDir = path.join(rootDir, 'frontend');
 const backendDir = path.join(rootDir, 'backend');
 const sslDir = path.join(rootDir, 'ssl');
 
+// Визначення команди Docker Compose (одразу виконується при імпорті модуля)
+let dockerComposeCommand = 'docker-compose';
+try {
+  // Спочатку перевіряємо docker compose (нова версія)
+  execSync('docker compose version', { stdio: 'ignore' });
+  dockerComposeCommand = 'docker compose';
+} catch (error) {
+  try {
+    // Потім пробуємо docker-compose (стара версія)
+    execSync('docker-compose --version', { stdio: 'ignore' });
+    dockerComposeCommand = 'docker-compose';
+  } catch (composeError) {
+    console.warn(`${colors.yellow}УВАГА: Docker Compose не знайдено. Функції, пов'язані з Docker, можуть не працювати.${colors.reset}`);
+  }
+}
+
 /**
  * Виконує команду у вказаній директорії
  * @param {string} command - Команда для виконання
@@ -39,11 +55,26 @@ function runCommand(command, cwd) {
 function runDockerCompose(command, detached = false) {
   const args = command.split(' ');
   const options = detached ? ['-d'] : [];
-  const fullCommand = ['docker-compose', ...args, ...options];
   
-  console.log(`${colors.blue}Виконую: ${colors.cyan}${fullCommand.join(' ')}${colors.reset}`);
+  // Розбиваємо dockerComposeCommand на складові для правильного виклику
+  const composeCommandParts = dockerComposeCommand.split(' ');
+  const baseCommand = composeCommandParts[0]; // 'docker' або 'docker-compose'
+  const restArgs = composeCommandParts.slice(1); // ['compose'] або []
   
-  const child = spawn(fullCommand[0], fullCommand.slice(1), { stdio: 'inherit' });
+  // Формуємо повну команду
+  const fullArgs = [...restArgs, ...args, ...options];
+  
+  console.log(`${colors.blue}Виконую: ${colors.cyan}${dockerComposeCommand} ${args.join(' ')} ${options.join(' ')}${colors.reset}`);
+  
+  const child = spawn(baseCommand, fullArgs, { stdio: 'inherit' });
+  
+  child.on('error', (error) => {
+    console.error(`${colors.red}Помилка виконання команди: ${error.message}${colors.reset}`);
+    
+    if (error.code === 'ENOENT') {
+      console.error(`${colors.red}Команда "${baseCommand}" не знайдена. Переконайтеся, що Docker встановлений і доступний у PATH.${colors.reset}`);
+    }
+  });
   
   child.on('close', (code) => {
     if (code !== 0) {
@@ -52,6 +83,24 @@ function runDockerCompose(command, detached = false) {
   });
   
   return child;
+}
+
+/**
+ * Виконує Docker Compose команду через execSync
+ * @param {string} command - Команда для виконання (без префіксу "docker-compose")
+ * @param {object} options - Опції для execSync
+ */
+function execDockerCompose(command, options = {}) {
+  try {
+    execSync(`${dockerComposeCommand} ${command}`, {
+      stdio: 'inherit',
+      ...options
+    });
+    return true;
+  } catch (error) {
+    console.error(`${colors.red}Помилка виконання Docker Compose команди: ${error.message}${colors.reset}`);
+    return false;
+  }
 }
 
 /**
@@ -111,8 +160,15 @@ function checkDocker() {
  */
 function checkDockerCompose() {
   try {
-    execSync('docker-compose --version', { stdio: 'ignore' });
-    return true;
+    // Спочатку перевіряємо нову версію
+    try {
+      execSync('docker compose version', { stdio: 'ignore' });
+      return true;
+    } catch (error) {
+      // Якщо нової версії немає, пробуємо стару
+      execSync('docker-compose --version', { stdio: 'ignore' });
+      return true;
+    }
   } catch (error) {
     return false;
   }
@@ -141,7 +197,7 @@ async function checkRequirements() {
     log.success('✅ Docker встановлено');
     
     if (checkDockerCompose()) {
-      log.success('✅ Docker Compose встановлено');
+      log.success(`✅ Docker Compose встановлено (використовується команда: ${dockerComposeCommand})`);
     } else {
       log.warning('⚠️ Docker Compose не встановлено. Деякі функції будуть недоступні.');
     }
@@ -174,9 +230,11 @@ async function checkRequirements() {
 module.exports = {
   runCommand,
   runDockerCompose,
+  execDockerCompose,
   checkSslCertificates,
   checkDocker,
   checkDockerCompose,
+  dockerComposeCommand,
   checkRequirements,
   rootDir,
   frontendDir,
