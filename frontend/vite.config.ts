@@ -22,7 +22,7 @@ try {
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    // Умовно використовуємо HTTPS налаштування
+    // Використовуємо HTTPS налаштування
     https: httpsOptions,
     proxy: {
       '/api': {

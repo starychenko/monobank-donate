@@ -7,11 +7,11 @@ services:
         - VITE_API_URL=https://localhost:3001/api/parse-monobank
         - VITE_USE_HTTPS=true
         - VITE_DOMAIN=localhost
-        - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
+        - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
         - VITE_UPDATE_INTERVAL=15000
-        - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=1
-        - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=1
-        - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1
+        - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=2
+        - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=5
+        - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1000
         - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
     container_name: monobank-donate-frontend
     ports:
@@ -24,11 +24,11 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
+      - VITE_MONOBANK_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
       - VITE_UPDATE_INTERVAL=15000
-      - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=1
-      - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=1
-      - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1
+      - VITE_NOTIFICATION_THRESHOLD_TARGET_PERCENT=2
+      - VITE_NOTIFICATION_THRESHOLD_CURRENT_PERCENT=5
+      - VITE_NOTIFICATION_THRESHOLD_ABSOLUTE=1000
       - VITE_NOTIFICATION_PERMISSION_CHECK_INTERVAL=2000
 
     volumes:
@@ -46,7 +46,7 @@ services:
       - SSL_KEY_PATH=/app/ssl/server.key
       - SSL_CERT_PATH=/app/ssl/server.crt
       - ALLOWED_ORIGINS=https://localhost,https://localhost:443
-      - DEFAULT_JAR_URL=https://send.monobank.ua/jar/7dAsGZXPRB
+      - DEFAULT_JAR_URL=https://send.monobank.ua/jar/58vdbegH3T
       - CACHE_TTL=15
       - DOMAIN=localhost
       - RATE_LIMIT_GLOBAL_MAX=1000

@@ -11,6 +11,91 @@ const { waitForEnter } = require('../ui/prompts');
 const { checkFrontendDependencies, checkBackendDependencies } = require('../utils/dependency-checker');
 const { checkEnvFiles } = require('../config/env-manager');
 const { parseEnvFile } = require('../utils/fs-helpers');
+const { execSync } = require('child_process');
+
+/**
+ * Перевіряє, чи порт вільний
+ * @param {string} port - Номер порту для перевірки
+ * @returns {boolean} - true, якщо порт вільний, false - якщо зайнятий
+ */
+function isPortAvailable(port) {
+  try {
+    // Використовуємо більш надійний спосіб перевірки для Windows
+    if (process.platform === 'win32') {
+      // Додаємо опцію -n, щоб показати числові адреси замість імен для уникнення проблем з перекладом
+      const result = execSync(`netstat -ano -n | findstr :${port} | findstr LISTENING`, { 
+        encoding: 'utf8', 
+        stdio: ['pipe', 'pipe', 'ignore'] 
+      });
+      
+      // Якщо результат не порожній, порт зайнятий
+      return result.trim() === '';
+    } else {
+      // Для Unix-подібних систем
+      const result = execSync(`netstat -tuln | grep :${port}`, { 
+        encoding: 'utf8', 
+        stdio: ['pipe', 'pipe', 'ignore'] 
+      });
+      return result.trim() === '';
+    }
+  } catch (error) {
+    // Якщо команда завершилась з помилкою, ймовірно порт вільний
+    return true;
+  }
+}
+
+/**
+ * Отримує PID процесу, який використовує вказаний порт
+ * @param {string} port - Номер порту
+ * @returns {string|null} - PID процесу або null якщо не знайдено
+ */
+function getProcessUsingPort(port) {
+  try {
+    if (process.platform === 'win32') {
+      // Використовуємо більш надійний підхід з опцією -n для числових адрес
+      const result = execSync(`netstat -ano -n | findstr :${port} | findstr LISTENING`, { encoding: 'utf8' });
+      
+      // Перевіряємо, чи є результат
+      if (!result || result.trim() === '') {
+        return null;
+      }
+      
+      // Розбиваємо на рядки і беремо перший
+      const lines = result.trim().split('\n');
+      if (lines.length > 0) {
+        // Шукаємо PID в останньому стовпці (числове значення)
+        const pid = lines[0].trim().split(/\s+/).pop();
+        return pid || null;
+      }
+      return null;
+    } else {
+      const result = execSync(`lsof -i :${port} -P -n -t`, { encoding: 'utf8' });
+      return result.trim() || null;
+    }
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Отримує ім'я процесу за його PID
+ * @param {string} pid - PID процесу
+ * @returns {string} - Назва процесу
+ */
+function getProcessNameByPid(pid) {
+  try {
+    if (process.platform === 'win32') {
+      const result = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, { encoding: 'utf8' });
+      const match = result.match(/"([^"]+)"/);
+      return match ? match[1] : 'Невідомий процес';
+    } else {
+      const result = execSync(`ps -p ${pid} -o comm=`, { encoding: 'utf8' });
+      return result.trim() || 'Невідомий процес';
+    }
+  } catch (error) {
+    return 'Невідомий процес';
+  }
+}
 
 /**
  * Запускає frontend та backend локально
@@ -63,6 +148,63 @@ async function startLocal(rl, showMainMenu) {
     await waitForEnter();
     showMainMenu();
     return;
+  }
+  
+  // Перевіряємо, чи порти доступні
+  const frontendPort = "5173";
+  const backendPort = "3001";
+  
+  // Перевіряємо, чи порти доступні
+  const portsToCheck = [
+    { name: 'Frontend', port: frontendPort },
+    { name: 'Backend', port: backendPort }
+  ];
+  
+  for (const { name, port } of portsToCheck) {
+    if (!isPortAvailable(port)) {
+      const pid = getProcessUsingPort(port);
+      const processName = pid ? getProcessNameByPid(pid) : 'невідомий процес';
+      
+      log.error(`Порт ${port} (${name}) вже використовується процесом ${processName} (PID: ${pid}).`);
+      
+      const answer = await new Promise((resolve) => {
+        console.log(`\n${colors.yellow}Оберіть дію:${colors.reset}`);
+        console.log(`${colors.green}1.${colors.reset} Завершити процес, що блокує порт ${port}`);
+        console.log(`${colors.green}2.${colors.reset} Скасувати запуск`);
+        
+        rl.question(`${colors.yellow}Ваш вибір (1-2): ${colors.reset}`, (answer) => {
+          resolve(answer.trim());
+        });
+      });
+      
+      if (answer === '1') {
+        if (!pid) {
+          log.error('Неможливо визначити PID процесу, що блокує порт. Скасовую запуск.');
+          await waitForEnter();
+          showMainMenu();
+          return;
+        }
+        
+        try {
+          if (process.platform === 'win32') {
+            execSync(`taskkill /F /PID ${pid}`, { stdio: 'inherit' });
+          } else {
+            execSync(`kill -9 ${pid}`, { stdio: 'inherit' });
+          }
+          log.success(`Процес з PID ${pid} успішно завершено.`);
+        } catch (error) {
+          log.error(`Не вдалося завершити процес: ${error.message}`);
+          await waitForEnter();
+          showMainMenu();
+          return;
+        }
+      } else {
+        log.warning('Запуск скасовано.');
+        await waitForEnter();
+        showMainMenu();
+        return;
+      }
+    }
   }
   
   // Перевіряємо налаштування HTTPS
