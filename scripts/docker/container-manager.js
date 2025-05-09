@@ -11,6 +11,24 @@ const { waitForEnter } = require('../ui/prompts');
 const { displayServiceUrls } = require('../ui/messages');
 const { generateDockerComposeFiles } = require('./compose-generator');
 const { checkEnvFiles } = require('../config/env-manager');
+const { parseEnvFile } = require('../utils/env-parser');
+const { askYesNo } = require('../ui/prompts');
+
+/**
+ * Перевіряє, чи запущено Docker
+ * @returns {Promise<boolean>} - Результат перевірки
+ */
+async function isDockerRunning() {
+  try {
+    execSync('docker info', { stdio: 'ignore' });
+    log.success('Docker запущено і готовий до роботи');
+    return true;
+  } catch (error) {
+    log.error('Docker не запущено або не встановлено на системі');
+    log.info('Будь ласка, встановіть і запустіть Docker для продовження');
+    throw new Error('Docker не доступний');
+  }
+}
 
 /**
  * Перевіряє готовність проекту до запуску через Docker
@@ -207,6 +225,78 @@ async function checkPortsAvailability(frontendPort, backendPort, rl) {
 }
 
 /**
+ * Отримує шлях до файлу docker-compose
+ * @returns {Promise<string>} - Шлях до файлу
+ */
+async function getComposeFile() {
+  const devFilePath = path.join(rootDir, 'docker-compose.dev.yml');
+  const prodFilePath = path.join(rootDir, 'docker-compose.yml');
+  
+  // Перевіряємо наявність файлів
+  const devExists = fs.existsSync(devFilePath);
+  const prodExists = fs.existsSync(prodFilePath);
+  
+  if (!devExists && !prodExists) {
+    log.error('Не знайдено жодного файлу docker-compose');
+    throw new Error('Файли docker-compose не знайдено');
+  }
+  
+  // Запитуємо який файл використовувати
+  const answer = await askYesNo('Використати файл docker-compose.dev.yml для розробки? (Ні - для продакшену)');
+  
+  if (answer && devExists) {
+    log.info('Використовуємо docker-compose.dev.yml');
+    return 'docker-compose.dev.yml';
+  } else if (prodExists) {
+    log.info('Використовуємо docker-compose.yml');
+    return 'docker-compose.yml';
+  } else {
+    // Якщо вибраного файлу немає, використовуємо доступний
+    log.warning(`Вибраний файл не існує, використовуємо ${devExists ? 'docker-compose.dev.yml' : 'docker-compose.yml'}`);
+    return devExists ? 'docker-compose.dev.yml' : 'docker-compose.yml';
+  }
+}
+
+/**
+ * Отримує конфігурацію HTTPS з .env файлів
+ * @returns {Object} - Конфігурація HTTPS
+ */
+async function getHttpsConfig() {
+  const config = {
+    useHttps: false,
+    domain: 'localhost',
+    sslKeyPath: '',
+    sslCertPath: ''
+  };
+  
+  try {
+    // Читаємо конфігурацію з .env файлу backend
+    const backendEnvPath = path.join(rootDir, 'backend', '.env');
+    if (fs.existsSync(backendEnvPath)) {
+      const backendEnv = parseEnvFile(backendEnvPath);
+      config.useHttps = backendEnv.USE_HTTPS === 'true';
+      config.domain = backendEnv.DOMAIN || 'localhost';
+      
+      if (config.useHttps) {
+        config.sslKeyPath = backendEnv.SSL_KEY_PATH || '';
+        config.sslCertPath = backendEnv.SSL_CERT_PATH || '';
+        
+        // Якщо шляхи не вказані, встановлюємо стандартні
+        if (!config.sslKeyPath || !config.sslCertPath) {
+          const sslDir = path.join(rootDir, 'ssl');
+          config.sslKeyPath = path.join(sslDir, 'server.key');
+          config.sslCertPath = path.join(sslDir, 'server.crt');
+        }
+      }
+    }
+  } catch (error) {
+    log.error(`Помилка при отриманні HTTPS конфігурації: ${error.message}`);
+  }
+  
+  return config;
+}
+
+/**
  * Запуск проекту у режимі розробки через Docker
  * @param {Object} rl - Інтерфейс readline
  * @param {Function} showMainMenu - Функція для повернення до головного меню
@@ -221,6 +311,12 @@ async function startDevelopment(rl, showMainMenu) {
     showMainMenu();
     return;
   }
+  
+  // Визначаємо порт для frontend
+  const frontendPort = "443";
+  
+  // Отримуємо інформацію про HTTPS налаштування
+  const httpsConfig = await getHttpsConfig();
   
   // Перевіряємо наявність файлу docker-compose.dev.yml
   if (!fs.existsSync(path.join(rootDir, 'docker-compose.dev.yml'))) {
@@ -296,6 +392,12 @@ async function startProduction(rl, showMainMenu) {
     showMainMenu();
     return;
   }
+  
+  // Визначаємо порт для frontend
+  const frontendPort = "443";
+  
+  // Отримуємо інформацію про HTTPS налаштування
+  const httpsConfig = await getHttpsConfig();
   
   // Перевіряємо наявність файлу docker-compose.yml
   if (!fs.existsSync(path.join(rootDir, 'docker-compose.yml'))) {
@@ -442,46 +544,80 @@ async function showLogs(rl, showMainMenu) {
  * @returns {Promise<void>}
  */
 async function rebuildProject(rl, showMainMenu) {
-  log.warning('Вибір режиму для перебудови:');
-  console.log(`${colors.green}1.${colors.reset} Перебудувати режим розробки`);
-  console.log(`${colors.green}2.${colors.reset} Перебудувати продакшн режим`);
-  console.log(`${colors.green}3.${colors.reset} Перебудувати обидва режими`);
-  console.log(`${colors.green}4.${colors.reset} Повернутися до меню`);
-  
-  const choice = await new Promise((resolve) => {
-    rl.question(`\n${colors.yellow}Ваш вибір (1-4): ${colors.reset}`, (answer) => {
-      resolve(answer.trim());
-    });
-  });
-  
-  switch (choice) {
-    case '1':
-      log.info('Перебудова контейнерів для режиму розробки...');
-      execSync('docker-compose -f docker-compose.dev.yml build --no-cache', { stdio: 'inherit' });
-      break;
-    case '2':
-      log.info('Перебудова контейнерів для продакшн режиму...');
-      execSync('docker-compose build --no-cache', { stdio: 'inherit' });
-      break;
-    case '3':
-      log.info('Перебудова контейнерів для режиму розробки...');
-      execSync('docker-compose -f docker-compose.dev.yml build --no-cache', { stdio: 'inherit' });
-      log.info('Перебудова контейнерів для продакшн режиму...');
-      execSync('docker-compose build --no-cache', { stdio: 'inherit' });
-      break;
-    case '4':
-      showMainMenu();
-      return;
-    default:
-      log.error('Некоректний вибір!');
-      setTimeout(() => rebuildProject(rl, showMainMenu), 1000);
-      return;
+  try {
+    log.title('=== Перебудова Docker образів ===');
+    log.info('Перевірка наявності Docker...');
+    
+    // Перевіряємо наявність Docker
+    await isDockerRunning();
+    
+    // Перевіряємо наявність SSL-сертифікатів, якщо використовується HTTPS
+    const backendEnvPath = path.join(process.cwd(), 'backend', '.env');
+    let useHttps = false;
+    
+    if (fs.existsSync(backendEnvPath)) {
+      try {
+        const backendEnv = parseEnvFile(backendEnvPath);
+        useHttps = backendEnv.USE_HTTPS === 'true';
+      } catch (error) {
+        // Ігноруємо помилки читання .env
+      }
+    }
+    
+    if (useHttps) {
+      log.info('Виявлено конфігурацію з HTTPS. Перевіряємо наявність SSL-сертифікатів...');
+      
+      const sslDir = path.join(process.cwd(), 'ssl');
+      const keyPath = path.join(sslDir, 'server.key');
+      const certPath = path.join(sslDir, 'server.crt');
+      
+      if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+        log.warning('SSL-сертифікати не знайдено. Вони потрібні для збірки з HTTPS.');
+        const createCerts = await askYesNo('Створити тимчасові самопідписані сертифікати?');
+        
+        if (createCerts) {
+          const { createTemporaryDevCertificates } = require('../https/certificates');
+          const result = createTemporaryDevCertificates('localhost');
+          
+          if (!result.success) {
+            log.error('Не вдалося створити SSL-сертифікати. Збірка може завершитись помилкою.');
+            const continueWithoutCerts = await askYesNo('Продовжити без SSL-сертифікатів?');
+            if (!continueWithoutCerts) {
+              await waitForEnter();
+              showMainMenu();
+              return;
+            }
+          }
+        } else {
+          log.warning('Без SSL-сертифікатів збірка може завершитись помилкою при конфігурації з HTTPS');
+          const continueWithoutCerts = await askYesNo('Продовжити без SSL-сертифікатів?');
+          if (!continueWithoutCerts) {
+            await waitForEnter();
+            showMainMenu();
+            return;
+          }
+        }
+      } else {
+        log.success('SSL-сертифікати знайдено');
+      }
+    }
+    
+    log.info('Перебудова Docker образів без кешу...');
+    
+    // Запускаємо збірку образів без кешу
+    const composeFile = await getComposeFile();
+    execSync(`docker-compose -f ${composeFile} build --no-cache`, { stdio: 'inherit' });
+    
+    log.success('Docker образи успішно перебудовано!');
+    log.info('Тепер ви можете запустити проект через пункти "Запустити через Docker (розробка)" або "Запустити через Docker (продакшн)"');
+    
+    await waitForEnter();
+    showMainMenu();
+  } catch (error) {
+    log.error(`Помилка при перебудові Docker образів: ${error.message || error}`);
+    await waitForEnter();
+    showMainMenu();
   }
-  
-  log.success('Перебудова завершена!');
-  
-  await waitForEnter();
-  showMainMenu();
 }
 
 /**

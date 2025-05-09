@@ -182,10 +182,41 @@ async function setupSSLCertificates(rl, domain) {
   return generateSelfSignedCertificates(domain, certDir);
 }
 
+/**
+ * Створює тимчасові сертифікати для розробки без інтерактивного підтвердження
+ * @param {string} domain - Домен для сертифікату (за замовчуванням localhost)
+ * @returns {object} - Результат операції та шляхи до сертифікатів
+ */
+function createTemporaryDevCertificates(domain = 'localhost') {
+  try {
+    log.info(`Створюємо тимчасові сертифікати для розробки (домен: ${domain})...`);
+    
+    const certDir = path.join(rootDir, 'ssl');
+    
+    // Переконуємось, що директорія існує
+    ensureDirectoryExists(certDir);
+    
+    // Генеруємо сертифікати
+    const result = generateSelfSignedCertificates(domain, certDir);
+    
+    if (result.success) {
+      log.success('Тимчасові сертифікати створено успішно');
+      return result;
+    } else {
+      log.error('Не вдалося створити тимчасові сертифікати');
+      return { success: false };
+    }
+  } catch (error) {
+    log.error(`Помилка при створенні тимчасових сертифікатів: ${error.message}`);
+    return { success: false };
+  }
+}
+
 module.exports = {
   checkOpenSSL,
   generateSelfSignedCertificates,
   checkCertificatesExist,
   getCertificatePaths,
-  setupSSLCertificates
+  setupSSLCertificates,
+  createTemporaryDevCertificates
 }; 

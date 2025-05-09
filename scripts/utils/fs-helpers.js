@@ -74,63 +74,80 @@ function writeFileContent(filePath, content, encoding = 'utf8') {
 }
 
 /**
- * Парсить файл .env і повертає об'єкт зі змінними
- * @param {string} filePath - Шлях до .env файлу
- * @returns {Object} - Об'єкт з ключами та значеннями з .env файлу
+ * Оновлює значення змінної в .env файлі
+ * @param {string} envFilePath - Шлях до файлу .env
+ * @param {string} variableName - Назва змінної
+ * @param {string} value - Нове значення змінної
+ * @returns {boolean} - Успішність операції
  */
-function parseEnvFile(filePath) {
-  const result = {};
-  const content = readFileContent(filePath);
-  
-  if (!content) {
-    return result;
-  }
-  
-  content.split('\n').forEach(line => {
-    const trimmedLine = line.trim();
-    if (trimmedLine && !trimmedLine.startsWith('#') && trimmedLine.includes('=')) {
-      const [key, ...valueParts] = trimmedLine.split('=');
-      const value = valueParts.join('='); // На випадок, якщо у значенні є символ =
-      if (key) {
-        result[key.trim()] = value.trim();
-      }
-    }
-  });
-  
-  return result;
-}
-
-/**
- * Додає або оновлює значення у файлі .env
- * @param {string} filePath - Шлях до .env файлу
- * @param {string} key - Ключ
- * @param {string} value - Значення
- * @returns {boolean} - Результат операції
- */
-function updateEnvValue(filePath, key, value) {
+function updateEnvValue(envFilePath, variableName, value) {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
-    let found = false;
-    
-    const updatedLines = lines.map(line => {
-      if (line.startsWith(key + '=')) {
-        found = true;
-        return `${key}=${value}`;
+    if (!fs.existsSync(envFilePath)) return false;
+
+    let envContent = fs.readFileSync(envFilePath, 'utf8');
+    const envLines = envContent.split('\n');
+    let variableFound = false;
+
+    // Пошук змінної в файлі
+    const updatedLines = envLines.map(line => {
+      if (line.startsWith(`${variableName}=`) || line.startsWith(`${variableName} =`)) {
+        variableFound = true;
+        return `${variableName}=${value}`;
       }
       return line;
     });
-    
-    // Якщо ключ не знайдено, додаємо його в кінець файлу
-    if (!found) {
-      updatedLines.push(`${key}=${value}`);
+
+    // Якщо змінної немає, додаємо її в кінець файлу
+    if (!variableFound) {
+      updatedLines.push(`${variableName}=${value}`);
     }
-    
-    fs.writeFileSync(filePath, updatedLines.join('\n'), 'utf8');
+
+    // Записуємо оновлений вміст
+    fs.writeFileSync(envFilePath, updatedLines.join('\n'));
     return true;
   } catch (error) {
-    log.error(`Помилка при оновленні файлу ${filePath}: ${error.message}`);
+    console.error(`Помилка при оновленні змінної ${variableName}: ${error.message}`);
     return false;
+  }
+}
+
+/**
+ * Зчитує env-файл та парсить його в об'єкт
+ * @param {string} filePath - Шлях до .env файлу
+ * @returns {Object} - Об'єкт зі змінними середовища
+ */
+function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n');
+    const envVars = {};
+
+    lines.forEach(line => {
+      // Ігноруємо коментарі та порожні рядки
+      if (!line || line.startsWith('#')) {
+        return;
+      }
+
+      // Розділяємо ключ та значення
+      const match = line.match(/^\s*([^=]+?)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        const value = match[2] || '';
+        
+        // Видаляємо лапки, якщо вони є
+        const trimmedValue = value.replace(/^['"]|['"]$/g, '');
+        envVars[key] = trimmedValue;
+      }
+    });
+
+    return envVars;
+  } catch (error) {
+    console.error(`Помилка при читанні .env файлу: ${error.message}`);
+    return {};
   }
 }
 

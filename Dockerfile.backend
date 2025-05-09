@@ -1,49 +1,58 @@
-FROM node:18-alpine
-
-# Встановлюємо необхідні залежності для Puppeteer
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    openssl
-
-# Налаштування змінних середовища для Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-WORKDIR /app
-
-# Копіюємо файли залежностей
-COPY backend/package*.json ./
+# Етап збірки
+FROM node:20-slim as build
 
 # Встановлюємо залежності
+WORKDIR /app
+COPY backend/package*.json ./
 RUN npm ci
 
-# Копіюємо решту файлів проекту
+# Копіюємо вихідний код backend
 COPY backend/ ./
 
-# Створюємо .env файл, якщо його немає
-RUN touch .env
-
-# Створюємо директорію для SSL сертифікатів
-RUN mkdir -p /app/ssl
-
-# Додаємо налаштування CORS і HTTPS
-ENV ALLOWED_ORIGINS=http://localhost,https://localhost,http://frontend,https://frontend,http://localhost:5173,https://localhost:5173,http://frontend:80,https://frontend:443
-
-# Змінні середовища для HTTPS
-ENV USE_HTTPS=false \
-    DOMAIN=localhost
-
-# Будуємо проект
+# Збираємо проєкт
 RUN npm run build
 
-# Експонуємо порти
-EXPOSE 3001 80
+# Етап запуску
+FROM node:20-slim
 
-# Запускаємо сервер
+# Встановлюємо необхідні залежності
+RUN apt-get update && apt-get install -y \
+    openssl \
+    chromium \
+    ca-certificates \
+    fonts-freefont-ttf \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Змінні середовища для puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    NODE_ENV=production
+
+# Створюємо робочу директорію
+WORKDIR /app
+
+# Копіюємо залежності
+COPY backend/package*.json ./
+RUN npm ci --omit=dev
+
+# Копіюємо зібрану програму
+COPY --from=build /app/dist ./dist
+
+# Створюємо директорію public (замість копіювання)
+RUN mkdir -p /app/public
+
+# Створюємо директорію для SSL-сертифікатів
+RUN mkdir -p /app/ssl
+
+# Скрипт для автоматичного створення SSL-сертифікатів якщо потрібно
+COPY ./scripts/https/backend-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Створюємо директорії для повних прав доступу (для скріншотів)
+RUN mkdir -p /app/screenshots
+RUN chmod 777 /app/screenshots
+
+# Запускаємо backend через точку входу
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "dist/index.js"] 
