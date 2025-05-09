@@ -33,7 +33,8 @@ const log = {
   warning: text => console.log(colorize(text, 'yellow')),
   error: text => console.error(colorize(text, 'red')),
   highlight: text => console.log(colorize(text, 'bright')),
-  title: text => console.log(`\n${colorize(text, 'bright')}${colorize(text, 'yellow')}\n`)
+  title: text => console.log(`\n${colorize(text, 'bright')}${colorize(text, 'yellow')}\n`),
+  stepTitle: text => console.log(`\n${colorize(`> ${text}`, 'cyan')}\n`)
 };
 
 module.exports = {
