@@ -1,12 +1,17 @@
 import fs from 'fs';
+import path from 'path';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+// Отримуємо шлях до кореневої директорії проекту
+const rootDir = path.resolve(__dirname, '..');
 
 // Перевіряємо наявність SSL-сертифікатів
 let httpsOptions = undefined;
 try {
-  const sslKeyPath = 'C:\\GIT\\monobank-donate\\ssl\\server.key';
-  const sslCertPath = 'C:\\GIT\\monobank-donate\\ssl\\server.crt';
+  // Використовуємо path.join для кросплатформності замість жорстко закодованих шляхів
+  const sslKeyPath = path.join(rootDir, 'ssl', 'server.key');
+  const sslCertPath = path.join(rootDir, 'ssl', 'server.crt');
   
   if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
     httpsOptions = {
