@@ -45,14 +45,14 @@ RUN mkdir -p /app/public
 # Створюємо директорію для SSL-сертифікатів
 RUN mkdir -p /app/ssl
 
-# Скрипт для автоматичного створення SSL-сертифікатів якщо потрібно
-COPY ./scripts/https/backend-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Копіюємо entrypoint скрипт з вихідного файлу
+COPY backend-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Створюємо директорії для повних прав доступу (для скріншотів)
 RUN mkdir -p /app/screenshots
 RUN chmod 777 /app/screenshots
 
 # Запускаємо backend через точку входу
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["node", "dist/index.js"] 
